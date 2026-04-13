@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stylized Shading in Genshin Impact</title>
+
+<link rel="stylesheet" href="style.css">
+<script src="script.js" defer></script>
+</head>
+
+<body>
+
+<div id="progress-bar"></div>
+
+<header>
+  <div class="badge">Game Graphics</div>
+  <h1>How Genshin Impact Achieves Its Stylized Cel-Shading</h1>
+  <p>Artistic Direction and Finetuning</p>
+</header>
+
+<div class="container">
+
+<nav>
+<h3>Contents</h3>
+<a href="#intro">Introduction</a>
+<a href="#light">Light</a>
+<a href="#shadow">Shadow</a>
+<a href="#outlines">Outlines</a>
+<a href="#metals">Metals</a>
+<a href="#conclusion">Conclusion</a>
+<a href="#sources">Sources</a>
+</nav>
+
+<main>
+
+<section id="intro">
+<p>
+Modern anime-style games often attempt to recreate the look of hand-drawn animation within a 3D environment. One of the most recognizable examples is Genshin Impact, developed by HoYoverse. Instead of relying on fully realistic rendering, the game uses stylized shading techniques that simplify lighting, shadows, and outlines in order to mimic anime illustration.
+</p>
+
+<p>
+Although the visuals appear simple, the style depends on a careful balance between technical rendering systems and artistic direction. By simplifying how light interacts with surfaces, the developers maintain strong colors, clear silhouettes, and expressive materials throughout the game.
+</p>
+</section>
+
+<section id="light">
+<h2>Light: Simplifying Illumination</h2>
+
+<p>
+Traditional 3D rendering simulates realistic lighting with smooth gradients and physically accurate reflections. In contrast, stylized anime rendering compresses lighting into fewer steps, creating sharper transitions between illuminated and shadowed surfaces. This contrast is especially visible when compared to The Legend of Zelda: Breath of the Wild, which retains softer gradients and more atmospheric lighting.
+</p>
+
+<p>
+This difference reflects two distinct artistic goals. While Breath of the Wild aims to create a cohesive and atmospheric world through natural lighting, Genshin Impact emphasizes readability and visual consistency. The sharper transitions in Genshin’s shading ensure that characters remain visually distinct regardless of environment, which is especially important in a game centered around character presentation.
+</p>
+
+<p>
+This simplified approach preserves the vibrant color palette used in anime-inspired character designs while still allowing the scene to respond dynamically to lighting.
+</p>
+
+<figure class="image-figure">
+<img src="genshin-vs-botw.png" alt="Genshin vs BOTW comparison">
+<figcaption>
+Nintendo's Breath of The Wild uses sharper solid cel-shading.
+</figcaption>
+</figure>
+
+<figure class="image-figure">
+<img src="hair-lighting.png" alt="Stylized lighting example">
+<figcaption>
+Stylized lighting example showing how soft gradients and color shifts are used to create anime-style hair shading under different lighting conditions.
+</figcaption>
+</figure>
+
+</section>
+
+<section id="shadow">
+<h2>Shadow: Designing the Shape of Light</h2>
+
+<p>
+In stylized rendering, shadows are often treated as a design element rather than a purely physical effect. Instead of appearing as gradual gradients, shadows can appear as defined shapes that help emphasize the character's form.
+</p>
+
+<p>
+Artists often control the placement and softness of shadows using threshold values or gradient textures, allowing them to maintain consistent and visually appealing shading across characters and environments.
+</p>
+
+<p>
+By designing shadows in this way, artists are able to maintain control over how forms are perceived, preventing important visual details from being lost in complex lighting conditions. This approach prioritizes clarity over realism, reinforcing the stylized aesthetic.
+</p>
+
+</section>
+
+<section id="outlines">
+<h2>Outlines: Emphasizing Silhouettes</h2>
+
+<p>
+Outlines are a defining feature of many anime-style rendering pipelines. By adding a dark border around the character's silhouette, the renderer reinforces the illusion that the character is hand-drawn rather than purely three-dimensional.
+</p>
+
+<p>
+This effect is typically created by rendering a slightly expanded version of the character mesh behind the original model in a darker color. The result is a clean outline that improves visual readability and helps characters stand out from the background.
+</p>
+
+<figure class="image-figure">
+<img src="paimon-outline.png" alt="Outline rendering example">
+<figcaption>
+Outline rendering technique used in Genshin Impact. The middle image shows a debug silhouette used to generate the final outline surrounding the character.
+</figcaption>
+</figure>
+
+</section>
+
+<section id="metals">
+<h2>Stylized Metals and Highlights</h2>
+<p>
+Metal surfaces often use exaggerated highlights instead of complex reflections. These highlights
+move with lighting and camera angles, suggesting shininess while maintaining the stylized look.
+</p>
+
+<figure class="image-figure">
+<img src="metal.gif" alt="Stylized metal highlight example">
+<figcaption>
+Stylized metal highlights moving across the surface as lighting and camera angle change.
+</figcaption>
+</figure>
+
+</section>
+
+<section id="conclusion">
+<h2>Conclusion</h2>
+
+<p>
+The rendering style of Genshin Impact demonstrates how modern graphics technology can support a strong artistic vision. By simplifying lighting, shaping shadows, reinforcing silhouettes with outlines, and stylizing materials, the developers create a visual style that closely resembles anime illustration.
+</p>
+
+<p>
+Rather than focusing on realism, the game prioritizes clarity, color, and expressive design, allowing its characters and environments to remain visually distinctive throughout gameplay.
+</p>
+
+<p>
+This approach also shapes how players perceive and interact with the game world. The emphasis on clarity and stylization ensures that characters remain the visual focus, supporting both gameplay readability and the game's identity as a character-driven experience.
+</p>
+
+</section>
+
+<section id="sources" class="sources">
+
+<h2>Sources</h2>
+
+<p>
+<a href="https://www.classcentral.com/course/youtube-finding-harmony-in-anime-style-and-physically-based-rendering-157932">
+Finding Harmony in Anime Style and Physically Based Rendering – Game Developers Conference
+</a>
+</p>
+
+<p>
+<a href="https://nugglet.github.io/posts/2022/12/console_graphics_rendering_pipeline_genshin_impact">
+Genshin Impact Rendering Pipeline Breakdown
+</a>
+</p>
+
+<p>
+<a href="https://github.com/festivities/Blender-miHoYo-Shaders">
+Blender miHoYo Shader Recreation
+</a>
+</p>
+
+</section>
+
+</main>
+
+</div>
+
+<footer>
+Essay webpage
+</footer>
+
+</body>
+</html>
