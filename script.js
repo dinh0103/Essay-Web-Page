@@ -10,7 +10,7 @@ const S = {
 };
 
 // ── Rotation state ─────────────────────────────────────
-let rotX=-0.25, rotY=0.35;
+var rotX=-0.25, rotY=0.35;
 let cx_,sx_,cy_,sy_;
 function updateRot(){cx_=Math.cos(rotX);sx_=Math.sin(rotX);cy_=Math.cos(rotY);sy_=Math.sin(rotY);}
 updateRot();
@@ -20,7 +20,7 @@ function rotWO(v){return[cy_*v[0]-sy_*v[2], sy_*sx_*v[0]+cx_*v[1]+cy_*sx_*v[2], 
 // ── Canvas sizing (viewer column = 46% of window) ──────
 const DPR=Math.min(window.devicePixelRatio||1,2);
 function cssW(){
-  const vw=window.innerWidth*0.38-40;
+  const vw=Math.min(window.innerWidth*0.9-40, 600);
   return Math.max(110,Math.min(210,Math.floor(vw/3)));
 }
 function cssH(){return Math.round(cssW()*1.18);}
@@ -39,7 +39,7 @@ const SPHERES=[
   {key:'nintendo', label:'Nintendo', subE:'simplified',        subT:'posterized',         col:[42,185,100],  accent:'#1a9e58'},
   {key:'genshin',  label:'Genshin',  subE:'drawn',             subT:'authored toon',      col:[220,100,175], accent:'#d4437a'},
 ];
-let cvs={},offscreens={},mode='explore';
+var cvs={},offscreens={},mode='explore';
 
 function buildDisplay(){
   const area=document.getElementById('display');
@@ -64,7 +64,7 @@ function buildDisplay(){
 // ── Math ───────────────────────────────────────────────
 const norm=v=>{const l=Math.sqrt(v[0]**2+v[1]**2+v[2]**2)||1;return v.map(x=>x/l);};
 const dot=(a,b)=>a[0]*b[0]+a[1]*b[1]+a[2]*b[2];
-const clamp=(v,lo,hi)=>Math.max(lo,Math.min(hi,v));
+var clamp=(v,lo,hi)=>Math.max(lo,Math.min(hi,v));
 function getL(){const a=S.az*Math.PI/180,e=S.el*Math.PI/180;return norm([Math.cos(e)*Math.sin(a),Math.sin(e),Math.cos(e)*Math.cos(a)]);}
 
 // ── Shape raycasting ───────────────────────────────────
@@ -237,44 +237,23 @@ function drawAll(){
   drawCanvas('pbr',(N,L,col)=>shadePBR(N,L,col));
   drawCanvas('nintendo',(N,L,col)=>shadeNintendo(N,L,col));
   drawCanvas('genshin',(N,L,col,py)=>shadeGenshin(N,L,col,py));
+  if(typeof syncMirrors==='function') syncMirrors();
 }
-
-// ── Drag to rotate (on viewer) ─────────────────────────
-const viewerEl=document.getElementById('viewer');
-let dragPrev=null;
-viewerEl.addEventListener('mousedown',e=>{dragPrev={x:e.clientX,y:e.clientY};viewerEl.classList.add('dragging');e.preventDefault();});
-window.addEventListener('mousemove',e=>{if(!dragPrev)return;rotY-=(e.clientX-dragPrev.x)*0.012;rotX-=(e.clientY-dragPrev.y)*0.012;rotX=clamp(rotX,-Math.PI/2,Math.PI/2);dragPrev={x:e.clientX,y:e.clientY};updateRot();drawAll();});
-window.addEventListener('mouseup',()=>{dragPrev=null;viewerEl.classList.remove('dragging');});
-viewerEl.addEventListener('touchstart',e=>{const t=e.touches[0];dragPrev={x:t.clientX,y:t.clientY};},{passive:true});
-window.addEventListener('touchmove',e=>{if(!dragPrev)return;const t=e.touches[0];rotY-=(t.clientX-dragPrev.x)*0.012;rotX-=(t.clientY-dragPrev.y)*0.012;rotX=clamp(rotX,-Math.PI/2,Math.PI/2);dragPrev={x:t.clientX,y:t.clientY};updateRot();drawAll();},{passive:true});
-window.addEventListener('touchend',()=>{dragPrev=null;});
 
 // ── IntersectionObserver: section → S.tab ─────────────
 const story=document.getElementById('story');
 const secIndicator=document.getElementById('viewer-section');
 const observer=new IntersectionObserver(entries=>{
   entries.forEach(entry=>{
-    if(entry.isIntersecting&&entry.intersectionRatio>=0.5){
+    if(entry.isIntersecting){
       const tab=entry.target.dataset.tab;
       S.tab=tab;
       if(secIndicator)secIndicator.textContent=tab;
-      document.querySelectorAll('.sec-dot').forEach(d=>{d.classList.toggle('active',d.dataset.target==='sec-'+tab);});
       drawAll();
     }
   });
-},{root:story,threshold:0.5});
+},{root:null,rootMargin:'-20% 0px -20% 0px',threshold:0});
 document.querySelectorAll('.story-sec').forEach(sec=>observer.observe(sec));
-
-// Section dot clicks
-document.querySelectorAll('.sec-dot').forEach(dot=>{
-  dot.addEventListener('click',()=>{
-    const t=document.getElementById(dot.dataset.target);
-    if(t)t.scrollIntoView({behavior:'smooth'});
-  });
-});
-
-// ── Mode toggle ────────────────────────────────────────
-
 
 // ── Shape + scene ──────────────────────────────────────
 function wireSeg(id,key,cb){
@@ -344,52 +323,36 @@ function initCmp(id){
   window.addEventListener('touchmove',e=>{if(dragging)setPos(e.touches[0].clientX);},{passive:true});
   window.addEventListener('touchend',()=>{dragging=false;});
 }
-['cmp-lighting','cmp-shadows','cmp-shading','cmp-outlines'].forEach(initCmp);
-
-// ── Intro screens ──────────────────────────────────────────
-const introA    = document.getElementById('intro-a');
-const introC    = document.getElementById('intro-c');
-const introQ    = document.getElementById('intro-q');
-const enterHint = document.getElementById('enter-hint');
-const introInner= document.getElementById('intro-inner');
-const introEnter= document.getElementById('intro-enter');
-
-// Stagger intro A: headline first, hint after
-setTimeout(()=>{ introQ.classList.add('show'); }, 120);
-setTimeout(()=>{ enterHint.classList.add('show'); }, 600);
-
-function goToC() {
-  introA.classList.add('hidden');
-  setTimeout(()=>{
-    introA.classList.add('gone');
-    introC.classList.remove('gone');
-    requestAnimationFrame(()=> requestAnimationFrame(()=>{
-      introInner.classList.add('show');
-    }));
-  }, 700);
-}
-
-function enterTool() {
-  introC.classList.add('hidden');
-  setTimeout(()=>{ introC.classList.add('gone'); }, 700);
-}
-
-introA.addEventListener('click', goToC);
-introEnter.addEventListener('click', e=>{ e.stopPropagation(); enterTool(); });
+['cmp-shadows'].forEach(initCmp);
 
 buildDisplay();
-drawAll();
 
-  // Cursor direction based on scroll position
-  function updateStoryCursor() {
-    var s = story;
-    var atBottom = s.scrollTop + s.clientHeight >= s.scrollHeight - 10;
-    var atTop = s.scrollTop <= 10;
-    if (atBottom && !atTop) {
-      s.classList.add('at-bottom');
-    } else {
-      s.classList.remove('at-bottom');
-    }
-  }
-  story.addEventListener('scroll', updateStoryCursor);
-  updateStoryCursor();
+// ── Mirror canvases: one set per section slot ───────────
+const SPHERE_KEYS=['pbr','nintendo','genshin'];
+document.querySelectorAll('.display-slot').forEach(slot=>{
+  const row=document.createElement('div');
+  row.style.cssText='display:flex;align-items:flex-end;gap:.85rem;justify-content:center;cursor:grab;user-select:none;margin-bottom:.5rem;';
+  SPHERE_KEYS.forEach(key=>{
+    const c=document.createElement('canvas'); c.dataset.mirror=key; row.appendChild(c);
+  });
+  slot.insertBefore(row,slot.firstChild);
+  let dp=null;
+  row.addEventListener('mousedown',e=>{dp={x:e.clientX,y:e.clientY};row.style.cursor='grabbing';e.preventDefault();});
+  window.addEventListener('mousemove',e=>{if(!dp)return;rotY-=(e.clientX-dp.x)*0.012;rotX-=(e.clientY-dp.y)*0.012;rotX=clamp(rotX,-Math.PI/2,Math.PI/2);dp={x:e.clientX,y:e.clientY};updateRot();drawAll();});
+  window.addEventListener('mouseup',()=>{if(dp){dp=null;row.style.cursor='grab';}});
+  row.addEventListener('touchstart',e=>{const t=e.touches[0];dp={x:t.clientX,y:t.clientY};},{passive:true});
+  window.addEventListener('touchmove',e=>{if(!dp)return;const t=e.touches[0];rotY-=(t.clientX-dp.x)*0.012;rotX-=(t.clientY-dp.y)*0.012;rotX=clamp(rotX,-Math.PI/2,Math.PI/2);dp={x:t.clientX,y:t.clientY};updateRot();drawAll();},{passive:true});
+  window.addEventListener('touchend',()=>{dp=null;});
+});
+
+function syncMirrors(){
+  SPHERE_KEYS.forEach(key=>{
+    const src=cvs[key].canvas;
+    document.querySelectorAll(`canvas[data-mirror="${key}"]`).forEach(m=>{
+      if(m.width!==src.width||m.height!==src.height){m.width=src.width;m.height=src.height;m.style.width=src.style.width;m.style.height=src.style.height;}
+      m.getContext('2d').drawImage(src,0,0);
+    });
+  });
+}
+
+drawAll();

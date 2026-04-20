@@ -7,46 +7,26 @@
   <link rel="icon" type="image/png" href="paimon.png" />
   <link rel="stylesheet" href="style.css" />
   <style>
-    .viewer-panel { display: none; flex-direction: column; gap: .9rem; width: 100%; padding: 0 .75rem; }
-    .viewer-panel.active { display: flex; }
     .cmp { max-width: none; }
-    .cmp-inner { padding-top: 75%; }
-    figure { margin: 0 0 1rem; width: 75%; }
+    .cmp-inner { padding-top: 65%; }
+    figure { margin: 0 auto 1.25rem; width: 100%; }
     figure img, figure .cmp { width: 100%; border-radius: 6px; margin-bottom: 0; }
     figcaption { font-size: 11px; color: var(--txt3); text-align: center; margin-top: .5rem; line-height: 1.5; }
 
-    /* Pin spheres, let sliders scroll below */
-    .viewer { justify-content: flex-start; padding-top: 2rem; overflow-y: auto; }
-    .viewer-top { display: flex; flex-direction: column; align-items: center; gap: .75rem; width: 100%; flex-shrink: 0; margin-bottom: 1.5rem; }
+    /* Sphere slot */
+    .display-slot {
+      display: flex; flex-direction: column; align-items: center;
+      gap: .5rem; margin-bottom: 2rem;
+    }
+    .display-hint { font-size: 10px; color: var(--txt3); letter-spacing: .03em; }
+    #display { display: flex; align-items: flex-end; gap: .85rem; justify-content: center; cursor: grab; user-select: none; }
+    #display.dragging { cursor: grabbing; }
 
-    /* Hide spheres at conclusion */
-    .viewer[data-tab="conclusion"] .viewer-top { opacity: 0; pointer-events: none; transition: opacity .5s; }
-    .viewer[data-tab="conclusion"] .viewer-panel { display: none; }
+    /* Sliders full column width */
+    .sec-ctrls { width: 100%; margin: 0 auto; }
   </style>
 </head>
 <body>
-
-  <!-- ── Intro Screen A ──────────────────────────────── -->
-  <div class="intro" id="intro-a">
-    <p class="intro-q" id="intro-q">Why does Genshin Impact look the way it looks?</p>
-    <div class="enter-hint" id="enter-hint">Click anywhere to continue</div>
-  </div>
-
-  <!-- ── Intro Screen C ──────────────────────────────── -->
-  <div class="intro gone" id="intro-c">
-    <div class="intro-inner" id="intro-inner">
-      <div class="intro-label">About this tool</div>
-      <h2 class="intro-title">Toon shading is a deliberate choice to look less real.</h2>
-      <div class="intro-body">
-        <p>Modern anime-style games often recreate the look of hand-drawn animation inside a 3D environment. One of the most recognizable examples is Genshin Impact, developed by HoYoverse. Instead of fully realistic rendering, the game uses stylized shading techniques that simplify lighting, shadows, and outlines to mimic anime illustration.</p>
-        <p>Although the visuals appear simple, the style depends on a careful balance between technical rendering systems and artistic direction. By simplifying how light interacts with surfaces, the developers maintain strong colors, clear silhouettes, and expressive materials.</p>
-        <p>Drag the shapes to rotate them. Scroll through each section.</p>
-      </div>
-      <button class="intro-enter" id="intro-enter">
-        Enter the tool <span class="arr">→</span>
-      </button>
-    </div>
-  </div>
 
   <!-- ── Topbar ──────────────────────────────────────── -->
   <header class="topbar">
@@ -66,103 +46,46 @@
     <span class="ldir" id="ldir">L=(0.00,0.00,0.00)</span>
   </header>
 
-  <!-- ── Nav Dots ────────────────────────────────────── -->
-  <nav class="sec-dots">
-    <button class="sec-dot active" data-target="sec-lighting"   title="Lighting"></button>
-    <button class="sec-dot"        data-target="sec-shadows"    title="Shadows"></button>
-    <button class="sec-dot"        data-target="sec-outlines"   title="Outlines"></button>
-    <button class="sec-dot"        data-target="sec-metals"     title="Materials"></button>
-    <button class="sec-dot"        data-target="sec-conclusion" title="Conclusion"></button>
-  </nav>
 
-  <!-- ── Main Split ──────────────────────────────────── -->
-  <div class="main">
+  <!-- Hidden viewer-section tracker for JS -->
+  <span id="viewer-section" style="display:none">lighting</span>
+  <!-- Hidden render target for script.js — mirrors copy from here -->
+  <div id="display" style="display:none;position:absolute;pointer-events:none;"></div>
 
-    <!-- ── Story Column ──────────────────────────────── -->
-    <div class="story" id="story">
+  <!-- ── Story ──────────────────────────────────────── -->
+  <div class="story" id="story">
 
-      <!-- §1 Lighting -->
-      <section class="story-sec" id="sec-lighting" data-tab="lighting">
-        <div class="sec-eye">01 / Lighting</div>
-        <h2 class="sec-q">Simplified Illumination</h2>
-        <p class="sec-body" style="max-width:none">Traditional 3D rendering simulates realistic lighting with smooth gradients and physically accurate reflections. In contrast, stylized anime rendering compresses lighting into fewer steps, creating sharper transitions between illuminated and shadowed surfaces. This contrast is especially visible when compared to The Legend of Zelda: Breath of the Wild, which retains softer gradients and more atmospheric lighting. This difference reflects two distinct artistic goals. While Breath of the Wild aims to create a cohesive and atmospheric world through natural lighting, Genshin Impact emphasizes readability and visual consistency. The sharper transitions in Genshin's shading ensure that characters remain visually distinct regardless of environment, which is especially important in a game centered around character presentation. This simplified approach preserves the vibrant color palette used in anime-inspired character designs while still allowing the scene to respond dynamically to lighting.</p>
-        <figure>
-          <img src="hair-lighting.png" alt="Hair lighting comparison — day vs night" />
-          <figcaption>Stylized lighting example showing how soft gradients and color shifts are used to create anime-style hair shading under different lighting conditions.</figcaption>
-        </figure>
-        <figure>
-          <img src="genshin-vs-botw.png" alt="Genshin Impact vs Breath of the Wild" />
-          <figcaption>Nintendo's Breath of the Wild uses sharper solid cel-shading.</figcaption>
-        </figure>
-      </section>
+    <!-- §0 Intro -->
+    <section class="story-sec" id="sec-intro" data-tab="lighting">
+      <div class="sec-eye">About this tool</div>
+      <h2 class="sec-q">Why does Genshin Impact look the way it looks?</h2>
+      <h3 style="font-family:Georgia,'Times New Roman',serif;font-size:clamp(16px,1.6vw,24px);font-weight:400;color:var(--txt2);letter-spacing:-.015em;margin-bottom:1.5rem;">Toon shading is a deliberate choice to look less real.</h3>
+      <p class="sec-body">Modern anime-style games often recreate the look of hand-drawn animation inside a 3D environment. One of the most recognizable examples is Genshin Impact, developed by HoYoverse. Instead of fully realistic rendering, the game uses stylized shading techniques that simplify lighting, shadows, and outlines to mimic anime illustration.</p>
+      <p class="sec-body">Although the visuals appear simple, the style depends on a careful balance between technical rendering systems and artistic direction. By simplifying how light interacts with surfaces, the developers maintain strong colors, clear silhouettes, and expressive materials.</p>
+    </section>
 
-      <!-- §2 Shadows -->
-      <section class="story-sec" id="sec-shadows" data-tab="shadows">
-        <div class="sec-eye">02 / Shadows</div>
-        <h2 class="sec-q">Shadow as a Design Element</h2>
-        <p class="sec-body" style="max-width:none">In stylized rendering, shadows are often treated as a design element rather than a purely physical effect. Instead of appearing as gradual gradients, shadows can appear as defined shapes that help emphasize the character's form. Artists often control the placement and softness of shadows using threshold values or gradient textures, allowing them to maintain consistent and visually appealing shading across characters and environments. By designing shadows in this way, artists are able to maintain control over how forms are perceived, preventing important visual details from being lost in complex lighting conditions. This approach prioritizes clarity over realism, reinforcing the stylized aesthetic.In stylized games like Genshin Impact, this approach helps surfaces stay readable even in bright outdoor environments or colorful scenes. Rather than aiming for photorealistic reflections, the lighting focuses on clear shapes and controlled highlights that emphasize the form of objects. This keeps the materials visually appealing while supporting the game's soft, painterly aesthetic.</p>
+    <!-- §1 Lighting -->
+    <section class="story-sec" id="sec-lighting" data-tab="lighting">
+      <div class="sec-eye">01 / Lighting</div>
+      <h2 class="sec-q">Simplified Illumination</h2>
+      <p class="sec-body">Traditional 3D rendering simulates realistic lighting with smooth gradients and physically accurate reflections. In contrast, stylized anime rendering compresses lighting into fewer steps, creating sharper transitions between illuminated and shadowed surfaces.</p>
+      <p class="sec-body">This contrast is especially visible when compared to The Legend of Zelda: Breath of the Wild, which retains softer gradients and more atmospheric lighting. While Breath of the Wild aims to create a cohesive atmospheric world through natural lighting, Genshin Impact emphasizes readability and visual consistency.</p>
+      <p class="sec-body">The sharper transitions in Genshin's shading ensure that characters remain visually distinct regardless of environment. This simplified approach preserves the vibrant color palette used in anime-inspired character designs while still allowing the scene to respond dynamically to lighting.</p>
 
-        <figure>
-          <div class="cmp" id="cmp-shadows">
-            <div class="cmp-inner">
-              <div class="cmp-side cmp-left">
-                <img src="nomap.png" alt="No face map" />
-              </div>
-              <div class="cmp-side cmp-right">
-                <img src="map.png" alt="With face map" />
-              </div>
-              <div class="cmp-divider"></div>
-              <div class="cmp-tag left">No face map</div>
-              <div class="cmp-tag right">With face map</div>
-            </div>
-          </div>
-          <figcaption>Drag to compare shadow shaping with and without a face map applied.</figcaption>
-        </figure>
-      </section>
+      <figure>
+        <img src="hair-lighting.png" alt="Hair lighting comparison — day vs night" />
+        <figcaption>Stylized lighting example showing how soft gradients and color shifts are used to create anime-style hair shading under different lighting conditions.</figcaption>
+      </figure>
+      <figure>
+        <img src="genshin-vs-botw.png" alt="Genshin Impact vs Breath of the Wild" />
+        <figcaption>Nintendo's Breath of the Wild uses sharper solid cel-shading.</figcaption>
+      </figure>
 
-      <!-- §3 Outlines -->
-      <section class="story-sec" id="sec-outlines" data-tab="outlines">
-        <div class="sec-eye">03 / Outlines</div>
-        <h2 class="sec-q">Emphasizing Silhouettes</h2>
-        <p class="sec-body" style="max-width:none">Outlines are a defining feature of many anime-style rendering pipelines. By adding a dark border around the character's silhouette, the renderer reinforces the illusion that the character is hand-drawn rather than purely three-dimensional. This effect is typically created by rendering a slightly expanded version of the character mesh behind the original model in a darker color. The result is a clean outline that improves visual readability and helps characters stand out from the background.</p>
-
-        <figure>
-          <img src="paimon-outline.png" alt="Paimon outline — before, debug, and with outline" />
-          <figcaption>Left to right: original render, expanded mesh debug view, and final outline applied.</figcaption>
-        </figure>
-      </section>
-
-      <!-- §4 Metals -->
-      <section class="story-sec" id="sec-metals" data-tab="metals">
-        <div class="sec-eye">04 / Materials</div>
-        <h2 class="sec-q">Stylized Metals and Highlights</h2>
-        <p class="sec-body" style="max-width:none">Materials such as metal surfaces are also stylized to match the overall art direction. Instead of using complex reflections, many objects rely on exaggerated highlights that move across the surface when lighting changes. These highlights suggest shininess while maintaining performance and ensuring that the material style remains consistent with the rest of the visual design. In stylized games like Genshin Impact, this approach helps surfaces stay readable even in bright outdoor environments or colorful scenes. Rather than aiming for photorealistic reflections, the lighting focuses on clear shapes and controlled highlights that emphasize the form of objects. This keeps the materials visually appealing while supporting the game's soft, painterly aesthetic.</p>
-
-        <figure>
-          <img src="metal.gif" alt="Stylized metal highlights" />
-          <figcaption>Exaggerated specular highlights shift across the surface as the light direction changes.</figcaption>
-        </figure>
-      </section>
-
-      <!-- §5 Conclusion -->
-      <section class="story-sec" id="sec-conclusion" data-tab="conclusion">
-        <div class="sec-eye">05 / Conclusion</div>
-        <h2 class="sec-q">A deliberate visual language.</h2>
-        <p class="sec-body" style="max-width:none">The rendering style of Genshin Impact demonstrates how modern graphics technology can support a strong artistic vision. By simplifying lighting, shaping shadows, reinforcing silhouettes with outlines, and stylizing materials, the developers create a visual style that closely resembles anime illustration. Rather than focusing on realism, the game prioritizes clarity, color, and expressive design, allowing its characters and environments to remain visually distinctive throughout gameplay. This approach also shapes how players perceive and interact with the game world. The emphasis on clarity and stylization ensures that characters remain the visual focus, supporting both gameplay readability and the game's identity as a character-driven experience.</p>
-      </section>
-
-    </div><!-- /story -->
-
-    <!-- ── Viewer Column ──────────────────────────────── -->
-    <div class="viewer" id="viewer">
-      <div class="viewer-top">
-        <div class="viewer-section" id="viewer-section">lighting</div>
-        <div id="display"></div>
-        <div class="viewer-hint">drag to rotate</div>
+      <div class="display-slot">
+        <div class="display-hint">drag to rotate</div>
       </div>
 
-      <!-- Lighting controls -->
-      <div class="viewer-panel active" data-panel="lighting">
+      <div class="sec-ctrls">
         <div class="slrow">
           <div class="sltop"><span class="slname">Direction</span><span class="slval" id="v-az">45°</span></div>
           <input type="range" id="sl-az" min="0" max="360" step="1" value="45" />
@@ -180,9 +103,34 @@
           <input type="range" id="sl-dif" min="0" max="1.5" step="0.01" value="0.85" />
         </div>
       </div>
+    </section>
 
-      <!-- Shadow controls -->
-      <div class="viewer-panel" data-panel="shadows">
+    <!-- §2 Shadows -->
+    <section class="story-sec" id="sec-shadows" data-tab="shadows">
+      <div class="sec-eye">02 / Shadows</div>
+      <h2 class="sec-q">Shadow as a Design Element</h2>
+      <p class="sec-body">In stylized rendering, shadows are often treated as a design element rather than a purely physical effect. Instead of appearing as gradual gradients, shadows can appear as defined shapes that help emphasize the character's form.</p>
+      <p class="sec-body">Artists often control the placement and softness of shadows using threshold values or gradient textures, allowing them to maintain consistent and visually appealing shading across characters and environments.</p>
+      <p class="sec-body">By designing shadows in this way, artists are able to maintain control over how forms are perceived, preventing important visual details from being lost in complex lighting conditions. This approach prioritizes clarity over realism, reinforcing the stylized aesthetic.</p>
+
+      <figure>
+        <div class="cmp" id="cmp-shadows">
+          <div class="cmp-inner">
+            <div class="cmp-side cmp-left"><img src="nomap.png" alt="No face map" /></div>
+            <div class="cmp-side cmp-right"><img src="map.png" alt="With face map" /></div>
+            <div class="cmp-divider"></div>
+            <div class="cmp-tag left">No face map</div>
+            <div class="cmp-tag right">With face map</div>
+          </div>
+        </div>
+        <figcaption>Drag to compare shadow shaping with and without a face map applied.</figcaption>
+      </figure>
+
+      <div class="display-slot">
+        <div class="display-hint">drag to rotate</div>
+      </div>
+
+      <div class="sec-ctrls">
         <div class="sec-sub-label">Shadow mode</div>
         <div class="sec-opts">
           <button class="chip on" data-smode="native">Native</button>
@@ -203,9 +151,70 @@
           <input type="range" id="sl-shcol" min="0" max="1" step="0.01" value="0.45" />
         </div>
       </div>
+    </section>
 
-      <!-- Shading controls (§4 metals) -->
-      <div class="viewer-panel" data-panel="metals">
+    <!-- §3 Outlines -->
+    <section class="story-sec" id="sec-outlines" data-tab="outlines">
+      <div class="sec-eye">03 / Outlines</div>
+      <h2 class="sec-q">Emphasizing Silhouettes</h2>
+      <p class="sec-body">Outlines are a defining feature of many anime-style rendering pipelines. By adding a dark border around the character's silhouette, the renderer reinforces the illusion that the character is hand-drawn rather than purely three-dimensional.</p>
+      <p class="sec-body">This effect is typically created by rendering a slightly expanded version of the character mesh behind the original model in a darker color. The result is a clean outline that improves visual readability and helps characters stand out from the background.</p>
+
+      <figure>
+        <img src="paimon-outline.png" alt="Paimon outline — before, debug, and with outline" />
+        <figcaption>Left to right: original render, expanded mesh debug view, and final outline applied.</figcaption>
+      </figure>
+
+      <div class="display-slot">
+        <div class="display-hint">drag to rotate</div>
+      </div>
+
+      <div class="sec-ctrls">
+        <div class="sec-sub-label">Detection method</div>
+        <div class="sec-opts">
+          <button class="chip" data-omode="none">None</button>
+          <button class="chip on" data-omode="depth">Depth</button>
+          <button class="chip" data-omode="normal">Normal</button>
+          <button class="chip" data-omode="both">Both</button>
+        </div>
+        <div class="sec-sub-label">Outline colour</div>
+        <div class="sec-opts">
+          <button class="chip on" data-ocol="ink">Ink</button>
+          <button class="chip" data-ocol="colored">Tinted</button>
+          <button class="chip" data-ocol="dark">Dark</button>
+        </div>
+        <div class="slrow">
+          <div class="sltop"><span class="slname">Outline width</span><span class="slval" id="v-olt">2.0</span></div>
+          <input type="range" id="sl-olt" min="0.5" max="5" step="0.1" value="2.0" />
+        </div>
+        <div class="slrow">
+          <div class="sltop"><span class="slname">Edge sensitivity</span><span class="slval" id="v-oltsens">0.50</span></div>
+          <input type="range" id="sl-oltsens" min="0.05" max="1" step="0.01" value="0.5" />
+        </div>
+        <div class="slrow">
+          <div class="sltop"><span class="slname">Normal threshold</span><span class="slval" id="v-normedge">0.30</span></div>
+          <input type="range" id="sl-normedge" min="0.05" max="1" step="0.01" value="0.3" />
+        </div>
+      </div>
+    </section>
+
+    <!-- §4 Metals -->
+    <section class="story-sec" id="sec-metals" data-tab="metals">
+      <div class="sec-eye">04 / Materials</div>
+      <h2 class="sec-q">Stylized Metals and Highlights</h2>
+      <p class="sec-body">Materials such as metal surfaces are also stylized to match the overall art direction. Instead of using complex reflections, many objects rely on exaggerated highlights that move across the surface when lighting changes.</p>
+      <p class="sec-body">These highlights suggest shininess while maintaining performance and ensuring that the material style remains consistent with the rest of the visual design.</p>
+
+      <figure>
+        <img src="metal.gif" alt="Stylized metal highlights" />
+        <figcaption>Exaggerated specular highlights shift across the surface as the light direction changes.</figcaption>
+      </figure>
+
+      <div class="display-slot">
+        <div class="display-hint">drag to rotate</div>
+      </div>
+
+      <div class="sec-ctrls">
         <div class="slrow">
           <div class="sltop"><span class="slname">Toon bands</span><span class="slval" id="v-bands">2</span></div>
           <input type="range" id="sl-bands" min="1" max="8" step="1" value="2" />
@@ -235,53 +244,19 @@
           <input type="range" id="sl-facemap" min="0" max="1" step="0.01" value="0.65" />
         </div>
       </div>
+    </section>
 
-      <!-- Outline controls -->
-      <div class="viewer-panel" data-panel="outlines">
-        <div class="sec-sub-label">Detection method</div>
-        <div class="sec-opts">
-          <button class="chip" data-omode="none">None</button>
-          <button class="chip on" data-omode="depth">Depth</button>
-          <button class="chip" data-omode="normal">Normal</button>
-          <button class="chip" data-omode="both">Both</button>
-        </div>
-        <div class="sec-sub-label">Outline colour</div>
-        <div class="sec-opts">
-          <button class="chip on" data-ocol="ink">Ink</button>
-          <button class="chip" data-ocol="colored">Tinted</button>
-          <button class="chip" data-ocol="dark">Dark</button>
-        </div>
-        <div class="slrow">
-          <div class="sltop"><span class="slname">Outline width</span><span class="slval" id="v-olt">2.0</span></div>
-          <input type="range" id="sl-olt" min="0.5" max="5" step="0.1" value="2.0" />
-        </div>
-        <div class="slrow">
-          <div class="sltop"><span class="slname">Edge sensitivity</span><span class="slval" id="v-oltsens">0.50</span></div>
-          <input type="range" id="sl-oltsens" min="0.05" max="1" step="0.01" value="0.5" />
-        </div>
-        <div class="slrow">
-          <div class="sltop"><span class="slname">Normal threshold</span><span class="slval" id="v-normedge">0.30</span></div>
-          <input type="range" id="sl-normedge" min="0.05" max="1" step="0.01" value="0.3" />
-        </div>
-      </div>
+    <!-- §5 Conclusion -->
+    <section class="story-sec" id="sec-conclusion" data-tab="conclusion">
+      <div class="sec-eye">05 / Conclusion</div>
+      <h2 class="sec-q">A deliberate visual language.</h2>
+      <p class="sec-body">The rendering style of Genshin Impact demonstrates how modern graphics technology can support a strong artistic vision. By simplifying lighting, shaping shadows, reinforcing silhouettes with outlines, and stylizing materials, the developers create a visual style that closely resembles anime illustration.</p>
+      <p class="sec-body">Rather than focusing on realism, the game prioritizes clarity, color, and expressive design, allowing its characters and environments to remain visually distinctive throughout gameplay.</p>
+      <p class="sec-body">This approach also shapes how players perceive and interact with the game world. The emphasis on clarity and stylization ensures that characters remain the visual focus, supporting both gameplay readability and the game's identity as a character-driven experience.</p>
+    </section>
 
-      <!-- Conclusion (no controls) -->
-      <div class="viewer-panel" data-panel="conclusion"></div>
-
-    </div><!-- /viewer -->
-
-  </div><!-- /main -->
+  </div><!-- /story -->
 
   <script src="script.js"></script>
-  <script>
-    // Show the matching viewer-panel whenever the active section changes
-    const panels = document.querySelectorAll('.viewer-panel');
-    function showPanel(tab) {
-      panels.forEach(p => p.classList.toggle('active', p.dataset.panel === tab));
-    }
-    new MutationObserver(() => {
-      showPanel(document.getElementById('viewer-section').textContent.trim());
-    }).observe(document.getElementById('viewer-section'), { childList: true, characterData: true, subtree: true });
-  </script>
 </body>
 </html>
