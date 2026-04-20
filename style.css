@@ -16,7 +16,7 @@
   --amber:  #b87010;
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
-html, body { height: 100%; }
+html, body { min-height: 100%; }
 body {
   background: var(--bg); color: var(--txt);
   font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
@@ -131,18 +131,6 @@ html.dark .sph-sub { color: #3c3a38; }
 /* Paragraph spacing */
 .sec-body + .sec-body { margin-top: 1rem; }
 
-/* ── Nav dots ───────────────────────────────────────────── */
-.sec-dots {
-  position: fixed; left: .8rem; top: 50%; transform: translateY(-50%);
-  display: flex; flex-direction: column; gap: 9px; z-index: 50;
-}
-.sec-dot {
-  width: 5px; height: 5px; border-radius: 50%;
-  background: var(--bg4); cursor: pointer;
-  border: none; padding: 0; transition: background .2s, transform .2s;
-}
-.sec-dot.active { background: var(--ui); transform: scale(1.5); }
-
 /* ── Section typography ─────────────────────────────────── */
 .sec-eye {
   display: inline-block;
@@ -203,3 +191,49 @@ input[type=range]::-moz-range-thumb {
 canvas { display: block; }
 .sph-label { font-size: 11px; font-weight: 700; padding: .28rem 0 .05rem; letter-spacing: -.01em; }
 .sph-sub { font-size: 9px; color: var(--txt3); text-align: center; max-width: 110px; line-height: 1.3; padding-bottom: .2rem; }
+
+/* ── Scroll reveal ───────────────────────────────────────── */
+.reveal {
+  opacity: 0;
+  transform: translateY(14px);
+  transition: opacity .6s ease, transform .6s ease;
+}
+.reveal.visible {
+  opacity: 1;
+  transform: none;
+}
+.reveal:nth-child(2) { transition-delay: .08s; }
+.reveal:nth-child(3) { transition-delay: .16s; }
+.reveal:nth-child(4) { transition-delay: .24s; }
+.reveal:nth-child(5) { transition-delay: .32s; }
+.reveal:nth-child(6) { transition-delay: .40s; }
+
+/* ── Image hover scale ───────────────────────────────────── */
+figure { overflow: hidden; border-radius: 6px; }
+
+/* ── Scroll progress bar ─────────────────────────────────── */
+#progress-bar {
+  position: fixed; top: 0; left: 0; z-index: 100;
+  height: 2px; width: 0%;
+  background: var(--ui);
+  transition: width .1s linear;
+}
+html.dark #progress-bar { background: #e4e2dc; }
+
+/* ── Comparison panel overrides ─────────────────────────── */
+.cmp { max-width: none; }
+.cmp-inner { padding-top: 65%; }
+figure { margin: 0 auto 1.25rem; width: 100%; }
+figure img, figure .cmp { width: 100%; border-radius: 6px; margin-bottom: 0; }
+figcaption { font-size: 11px; color: var(--txt3); text-align: center; margin-top: .5rem; line-height: 1.5; }
+
+/* ── Sphere slot ─────────────────────────────────────────── */
+.display-slot {
+  display: flex; flex-direction: column; align-items: center;
+  gap: .5rem; margin-bottom: 2rem;
+}
+.display-hint { font-size: 10px; color: var(--txt3); letter-spacing: .03em; }
+#display { display: flex; align-items: flex-end; gap: .85rem; justify-content: center; }
+
+/* ── Slider controls ─────────────────────────────────────── */
+.sec-ctrls { width: 100%; margin: 0 auto; }

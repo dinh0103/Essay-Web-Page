@@ -6,27 +6,10 @@
   <title>Stylized Cel-Shading</title>
   <link rel="icon" type="image/png" href="paimon.png" />
   <link rel="stylesheet" href="style.css" />
-  <style>
-    .cmp { max-width: none; }
-    .cmp-inner { padding-top: 65%; }
-    figure { margin: 0 auto 1.25rem; width: 100%; }
-    figure img, figure .cmp { width: 100%; border-radius: 6px; margin-bottom: 0; }
-    figcaption { font-size: 11px; color: var(--txt3); text-align: center; margin-top: .5rem; line-height: 1.5; }
-
-    /* Sphere slot */
-    .display-slot {
-      display: flex; flex-direction: column; align-items: center;
-      gap: .5rem; margin-bottom: 2rem;
-    }
-    .display-hint { font-size: 10px; color: var(--txt3); letter-spacing: .03em; }
-    #display { display: flex; align-items: flex-end; gap: .85rem; justify-content: center; cursor: grab; user-select: none; }
-    #display.dragging { cursor: grabbing; }
-
-    /* Sliders full column width */
-    .sec-ctrls { width: 100%; margin: 0 auto; }
-  </style>
 </head>
 <body>
+
+  <div id="progress-bar"></div>
 
   <!-- ── Topbar ──────────────────────────────────────── -->
   <header class="topbar">
@@ -87,19 +70,19 @@
 
       <div class="sec-ctrls">
         <div class="slrow">
-          <div class="sltop"><span class="slname">Direction</span><span class="slval" id="v-az">45°</span></div>
+          <div class="sltop"><span class="slname">Light direction (azimuth)</span><span class="slval" id="v-az">45°</span></div>
           <input type="range" id="sl-az" min="0" max="360" step="1" value="45" />
         </div>
         <div class="slrow">
-          <div class="sltop"><span class="slname">Height</span><span class="slval" id="v-el">40°</span></div>
+          <div class="sltop"><span class="slname">Light height (elevation)</span><span class="slval" id="v-el">40°</span></div>
           <input type="range" id="sl-el" min="0" max="85" step="1" value="40" />
         </div>
         <div class="slrow">
-          <div class="sltop"><span class="slname">Shadow brightness</span><span class="slval" id="v-amb">0.25</span></div>
+          <div class="sltop"><span class="slname">Shadow fill (ambient)</span><span class="slval" id="v-amb">0.25</span></div>
           <input type="range" id="sl-amb" min="0" max="1" step="0.01" value="0.25" />
         </div>
         <div class="slrow">
-          <div class="sltop"><span class="slname">Intensity</span><span class="slval" id="v-dif">0.85</span></div>
+          <div class="sltop"><span class="slname">Light intensity (diffuse)</span><span class="slval" id="v-dif">0.85</span></div>
           <input type="range" id="sl-dif" min="0" max="1.5" step="0.01" value="0.85" />
         </div>
       </div>
@@ -116,14 +99,14 @@
       <figure>
         <div class="cmp" id="cmp-shadows">
           <div class="cmp-inner">
-            <div class="cmp-side cmp-left"><img src="nomap.png" alt="No face map" /></div>
-            <div class="cmp-side cmp-right"><img src="map.png" alt="With face map" /></div>
+            <div class="cmp-side cmp-left"><img src="nomap.png" alt="No shadow map" /></div>
+            <div class="cmp-side cmp-right"><img src="map.png" alt="With shadow map" /></div>
             <div class="cmp-divider"></div>
-            <div class="cmp-tag left">No face map</div>
-            <div class="cmp-tag right">With face map</div>
+            <div class="cmp-tag left">No shadow map</div>
+            <div class="cmp-tag right">With shadow map</div>
           </div>
         </div>
-        <figcaption>Drag to compare shadow shaping with and without a face map applied.</figcaption>
+        <figcaption>Drag to compare shadow shaping with and without a shadow map applied.</figcaption>
       </figure>
 
       <div class="display-slot">
@@ -136,18 +119,18 @@
           <button class="chip on" data-smode="native">Native</button>
           <button class="chip" data-smode="gradient">Gradient</button>
           <button class="chip" data-smode="hard">Hard</button>
-          <button class="chip" data-smode="facemap">Face Map</button>
+          <button class="chip" data-smode="facemap">Shadow Map</button>
         </div>
         <div class="slrow">
-          <div class="sltop"><span class="slname">Azimuth</span><span class="slval" id="v-az-sh">45°</span></div>
+          <div class="sltop"><span class="slname">Shadow direction (azimuth)</span><span class="slval" id="v-az-sh">45°</span></div>
           <input type="range" id="sl-az-sh" min="0" max="360" step="1" value="45" />
         </div>
         <div class="slrow">
-          <div class="sltop"><span class="slname">Hardness</span><span class="slval" id="v-hard">0.92</span></div>
+          <div class="sltop"><span class="slname">Edge sharpness</span><span class="slval" id="v-hard">0.92</span></div>
           <input type="range" id="sl-hard" min="0" max="1" step="0.01" value="0.92" />
         </div>
         <div class="slrow">
-          <div class="sltop"><span class="slname">Shadow colour</span><span class="slval" id="v-shcol">0.45</span></div>
+          <div class="sltop"><span class="slname">Shadow tint</span><span class="slval" id="v-shcol">0.45</span></div>
           <input type="range" id="sl-shcol" min="0" max="1" step="0.01" value="0.45" />
         </div>
       </div>
@@ -188,11 +171,11 @@
           <input type="range" id="sl-olt" min="0.5" max="5" step="0.1" value="2.0" />
         </div>
         <div class="slrow">
-          <div class="sltop"><span class="slname">Edge sensitivity</span><span class="slval" id="v-oltsens">0.50</span></div>
+          <div class="sltop"><span class="slname">Outline sensitivity</span><span class="slval" id="v-oltsens">0.50</span></div>
           <input type="range" id="sl-oltsens" min="0.05" max="1" step="0.01" value="0.5" />
         </div>
         <div class="slrow">
-          <div class="sltop"><span class="slname">Normal threshold</span><span class="slval" id="v-normedge">0.30</span></div>
+          <div class="sltop"><span class="slname">Crease threshold (normals)</span><span class="slval" id="v-normedge">0.30</span></div>
           <input type="range" id="sl-normedge" min="0.05" max="1" step="0.01" value="0.3" />
         </div>
       </div>
@@ -216,11 +199,11 @@
 
       <div class="sec-ctrls">
         <div class="slrow">
-          <div class="sltop"><span class="slname">Toon bands</span><span class="slval" id="v-bands">2</span></div>
+          <div class="sltop"><span class="slname">Shading steps (toon bands)</span><span class="slval" id="v-bands">2</span></div>
           <input type="range" id="sl-bands" min="1" max="8" step="1" value="2" />
         </div>
         <div class="slrow">
-          <div class="sltop"><span class="slname">Roughness (PBR)</span><span class="slval" id="v-rough">0.40</span></div>
+          <div class="sltop"><span class="slname">Surface roughness (PBR)</span><span class="slval" id="v-rough">0.40</span></div>
           <input type="range" id="sl-rough" min="0.02" max="1" step="0.01" value="0.4" />
         </div>
         <div class="slrow">
@@ -228,19 +211,19 @@
           <input type="range" id="sl-rim" min="0" max="1.5" step="0.01" value="0.75" />
         </div>
         <div class="slrow">
-          <div class="sltop"><span class="slname">Rim warmth</span><span class="slval" id="v-rimcol">0.20</span></div>
+          <div class="sltop"><span class="slname">Rim color warmth</span><span class="slval" id="v-rimcol">0.20</span></div>
           <input type="range" id="sl-rimcol" min="0" max="1" step="0.01" value="0.2" />
         </div>
         <div class="slrow">
-          <div class="sltop"><span class="slname">Specular threshold</span><span class="slval" id="v-spec">0.14</span></div>
+          <div class="sltop"><span class="slname">Highlight size (specular)</span><span class="slval" id="v-spec">0.14</span></div>
           <input type="range" id="sl-spec" min="0" max="0.5" step="0.005" value="0.14" />
         </div>
         <div class="slrow">
-          <div class="sltop"><span class="slname">Shadow colour</span><span class="slval" id="v-shcol2">0.45</span></div>
+          <div class="sltop"><span class="slname">Shadow tint</span><span class="slval" id="v-shcol2">0.45</span></div>
           <input type="range" id="sl-shcol2" min="0" max="1" step="0.01" value="0.45" />
         </div>
         <div class="slrow">
-          <div class="sltop"><span class="slname">Face map blend</span><span class="slval" id="v-facemap">0.65</span></div>
+          <div class="sltop"><span class="slname">Shadow map blend</span><span class="slval" id="v-facemap">0.65</span></div>
           <input type="range" id="sl-facemap" min="0" max="1" step="0.01" value="0.65" />
         </div>
       </div>

@@ -152,7 +152,7 @@ function buildEdgeMask(db,nb){
 }
 function isOutline(px,py){
   if(S.outlineMode==='none'||!edgeMask)return false;
-  const rad=Math.max(1,Math.round(S.olt*0.8));
+  const rad=Math.max(1,Math.round(S.olt*0.8*DPR));
   for(let dy=-rad;dy<=rad;dy++) for(let dx=-rad;dx<=rad;dx++){
     if(dx*dx+dy*dy>rad*rad)continue;
     const nx=clamp(px+dx,0,CW-1),ny=clamp(py+dy,0,CH-1);
@@ -356,3 +356,30 @@ function syncMirrors(){
 }
 
 drawAll();
+
+// ── Auto-rotate spheres when idle ──────────────────────
+let autoRotating=true,lastDrag=0;
+function autoRotate(){
+  if(autoRotating&&Date.now()-lastDrag>1500){rotY+=0.004;updateRot();drawAll();}
+  requestAnimationFrame(autoRotate);
+}
+document.querySelectorAll('[data-mirror]').forEach(m=>{
+  m.parentElement.addEventListener('mousedown',()=>{lastDrag=Date.now();autoRotating=false;});
+});
+window.addEventListener('mouseup',()=>{autoRotating=true;lastDrag=Date.now();});
+autoRotate();
+// ── Scroll progress bar ───────────────────────────────────
+const progressBar=document.getElementById('progress-bar');
+window.addEventListener('scroll',()=>{
+  const pct=window.scrollY/(document.body.scrollHeight-window.innerHeight)*100;
+  progressBar.style.width=Math.min(pct,100)+'%';
+});
+
+// ── Scroll reveal ─────────────────────────────────────────
+document.querySelectorAll('.sec-eye,.sec-q,h3,.sec-body,figure,.display-slot').forEach(el=>el.classList.add('reveal'));
+setTimeout(()=>{
+  const ro=new IntersectionObserver(entries=>{
+    entries.forEach(e=>e.target.classList.toggle('visible',e.isIntersecting));
+  },{threshold:0,rootMargin:'0px 0px -60px 0px'});
+  document.querySelectorAll('.reveal').forEach(el=>ro.observe(el));
+},200);
