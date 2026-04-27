@@ -3,7 +3,7 @@
 // ── State ───────────────────────────────────────────────
 var S = {
   az:45, el:40, amb:0.25, dif:0.85,
-  hard:0.6, shcol:0.45, softness:0.1,
+  hard:0.35, shcol:0.30, softness:0.2,
   omode:'depth', olt:2.0,
   bands:2, rough:0.4, rim:0.75, rimcol:0.2, spec:0.14,
   shape:'sphere', bg:'white', tab:'lighting'
@@ -71,16 +71,19 @@ uniform vec3 uLight;
 uniform float uAmb,uDif,uHard,uSoftness,uShcol,uRim,uRimcol,uBands;
 varying vec3 vNormal,vViewPos;
 void main(){
-  vec3 base=vec3(0.90,0.42,0.60);
+  vec3 base=vec3(0.96,0.52,0.72);
   vec3 N=normalize(vNormal),L=normalize(uLight),V=normalize(vViewPos);
   float diff=max(dot(N,L),0.0)*uDif;
-  float soft=max(uSoftness*0.2,0.008);
-  float threshold=uHard*(1.0-(uBands-1.0)*0.08);
-  float shadow=smoothstep(threshold-soft,threshold+soft,diff);
-  vec3 shadowTint=mix(vec3(0.45,0.52,0.82),vec3(1.0),uShcol);
-  vec3 col=mix(base*shadowTint,base,shadow);
-  col=col*(uAmb+diff*(1.0-uAmb));
-  float spec=pow(max(dot(reflect(-L,N),V),0.0),24.0)*0.5*shadow;
+  // Shadow boundary uses raw diff — makes softness and edge sharpness clearly visible
+  float soft=max(uSoftness*0.3,0.005);
+  float shadow=smoothstep(uHard-soft,uHard+soft,diff);
+  // Banding applied separately to diffuse response
+  float stepped=floor(diff*uBands)/uBands;
+  vec3 shadowTint=mix(vec3(0.55,0.58,0.88),vec3(1.0),uShcol);
+  vec3 lit=base*(uAmb+stepped*(1.0-uAmb));
+  vec3 shd=base*shadowTint*max(uAmb,0.45);
+  vec3 col=mix(shd,lit,shadow);
+  float spec=pow(max(dot(reflect(-L,N),V),0.0),24.0)*0.5*diff;
   col+=vec3(spec);
   float rim=smoothstep(0.38,0.68,1.0-max(dot(N,V),0.0))*uRim*0.85;
   col+=mix(vec3(1.0),vec3(1.0,0.80,0.50),uRimcol)*rim;
@@ -238,9 +241,6 @@ function drawAll(){
   KEYS.forEach(key=>{
     (renderers[key]||[]).forEach(r=>r.render(scenes[key],cameras[key]));
   });
-  const L=getLight();
-  const ld=document.getElementById('ldir');
-  if(ld) ld.textContent=`L=(${L.x.toFixed(2)},${L.y.toFixed(2)},${L.z.toFixed(2)})`;
 }
 
 // ── Slider wiring ────────────────────────────────────────
@@ -270,10 +270,11 @@ document.getElementById('shape-seg')&&document.getElementById('shape-seg').query
     document.getElementById('shape-seg').querySelectorAll('button').forEach(b=>b.classList.remove('on'));
     btn.classList.add('on'); S.shape=btn.dataset.val;
     if(!sharedMats) return;
-    rebuildMeshes(S.shape==='torusknot'
-      ? new THREE.TorusKnotGeometry(0.5,0.18,128,32)
+    const isKnot=S.shape==='torusknot';
+    KEYS.forEach(key=>cameras[key].position.set(0,0,isKnot?4.5:3.5));
+    rebuildMeshes(isKnot
+      ? new THREE.TorusKnotGeometry(0.6,0.22,128,32)
       : new THREE.SphereGeometry(1,64,64));
-    KEYS.forEach(key=>cameras[key].position.set(0,0,S.shape==='torusknot'?5.5:3.5));
   });
 });
 
@@ -347,3 +348,13 @@ initScenes();
 buildAllSlots();
 loadAssets();
 ['cmp-shadows'].forEach(initCmp);
+
+// ── Auto-rotate ──────────────────────────────────────────
+let autoRotating=true, lastDrag=0;
+function autoRotate(){
+  if(autoRotating&&Date.now()-lastDrag>2000){rotY+=0.003;updateRot();drawAll();}
+  requestAnimationFrame(autoRotate);
+}
+window.addEventListener('mousedown',()=>{lastDrag=Date.now();autoRotating=false;},true);
+window.addEventListener('mouseup',()=>{autoRotating=true;lastDrag=Date.now();},true);
+autoRotate();

@@ -28,7 +28,6 @@
       <button class="on" data-val="white">Light</button>
       <button data-val="black">Dark</button>
     </div>
-    <span class="ldir" id="ldir">L=(0.00,0.00,0.00)</span>
   </header>
 
 
@@ -110,16 +109,16 @@
 
       <div class="sec-ctrls">
         <div class="slrow">
-          <div class="sltop"><span class="slname">Shadow softness</span><span class="slval" id="v-softness">0.10</span></div>
-          <input type="range" id="sl-softness" min="0.01" max="1" step="0.01" value="0.1" />
+          <div class="sltop"><span class="slname">Shadow softness</span><span class="slval" id="v-softness">0.20</span></div>
+          <input type="range" id="sl-softness" min="0.01" max="1" step="0.01" value="0.2" />
         </div>
         <div class="slrow">
-          <div class="sltop"><span class="slname">Edge sharpness</span><span class="slval" id="v-hard">0.60</span></div>
-          <input type="range" id="sl-hard" min="0" max="1" step="0.01" value="0.92" />
+          <div class="sltop"><span class="slname">Edge sharpness</span><span class="slval" id="v-hard">0.35</span></div>
+          <input type="range" id="sl-hard" min="0.1" max="0.9" step="0.01" value="0.35" />
         </div>
         <div class="slrow">
-          <div class="sltop"><span class="slname">Shadow tint</span><span class="slval" id="v-shcol">0.45</span></div>
-          <input type="range" id="sl-shcol" min="0" max="1" step="0.01" value="0.45" />
+          <div class="sltop"><span class="slname">Shadow tint</span><span class="slval" id="v-shcol">0.30</span></div>
+          <input type="range" id="sl-shcol" min="0" max="1" step="0.01" value="0.3" />
         </div>
       </div>
     </section>
@@ -165,7 +164,7 @@
         <div class="tex-col">
           <img src="hair_lightmap.png" alt="Lightmap texture" />
           <div class="tex-label">Lightmap</div>
-          <div class="tex-hint">R = specular · G = shadow threshold · B = material type</div>
+          <div class="tex-hint">Split into RGB channels — each color codes a different property: shadows, highlights, and material type</div>
         </div>
         <div class="tex-col">
           <img src="hair_normal.png" alt="Normal map texture" />
@@ -227,6 +226,6 @@
   </div><!-- /story -->
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-  <script src="script.js?v=3"></script>
+  <script src="script.js?v=4"></script>
 </body>
 </html>
