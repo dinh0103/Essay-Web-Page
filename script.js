@@ -3,27 +3,26 @@
 // ── State ───────────────────────────────────────────────
 var S = {
   az:45, el:40, amb:0.25, dif:0.85,
-  shadowMode:'native', hard:0.92, shcol:0.45, azSh:45,
+  shadowMode:'native', hard:0.6, shcol:0.45, azSh:45, softness:0.1,
   omode:'depth', ocol:'ink', olt:2.0, oltsens:0.5, normedge:0.3,
   bands:2, rough:0.4, rim:0.75, rimcol:0.2, spec:0.14, shcol2:0.45, facemap:0.65,
   shape:'sphere', bg:'white', tab:'lighting'
 };
-var rotX = -0.2, rotY = 0.4;
+var rotX=-0.2, rotY=0.4;
+var dragging=false, dragLast={x:0,y:0};
 
 const KEYS   = ['pbr','nintendo','genshin'];
-const LABELS = { pbr:'PBR', nintendo:'Nintendo', genshin:'Genshin' };
-const SUBS   = { pbr:'realistic', nintendo:'simplified', genshin:'drawn' };
-const COLORS = { pbr:'#1a6fd4', nintendo:'#1a9e58', genshin:'#d4437a' };
+const LABELS = {pbr:'PBR', nintendo:'Nintendo', genshin:'Genshin'};
+const SUBS   = {pbr:'realistic', nintendo:'simplified', genshin:'drawn'};
+const COLORS = {pbr:'#1a6fd4', nintendo:'#1a9e58', genshin:'#d4437a'};
 const SIZE   = 150;
 const DPR    = Math.min(window.devicePixelRatio, 2);
 
-// Three.js objects — one set per shader, shared across all slots
-const scenes={}, cameras={}, meshes={}, uniforms={};
-// renderers[key] = array of renderers (one per display-slot)
-const renderers={};
-var objGeometry=null, sharedMats=null;
+const scenes={}, cameras={}, meshes={}, outlineMeshes={}, uniforms={};
+const renderers={};  // renderers[key] = array of renderers
+var objGeometry=null, sharedMats=null, outlineMat=null;
 
-function getBgColor(){ return S.bg==='white' ? 0xf7f6f3 : 0x0d0c12; }
+function getBgColor(){ return S.bg==='white' ? '#f7f6f3' : '#0d0c12'; }
 function getLight(){
   const az=S.az*Math.PI/180, el=S.el*Math.PI/180;
   return new THREE.Vector3(
@@ -31,65 +30,84 @@ function getLight(){
   ).normalize();
 }
 
-// ── GLSL ────────────────────────────────────────────────
+// ── GLSL ─────────────────────────────────────────────────
 const VERT = `
 varying vec2 vUv;
 varying vec3 vNormal;
 varying vec3 vViewPos;
 void main(){
-  vUv = uv;
-  vec4 mv = modelViewMatrix*vec4(position,1.0);
-  vViewPos = -mv.xyz;
-  vNormal = normalize(normalMatrix*normal);
-  gl_Position = projectionMatrix*mv;
+  vUv=uv;
+  vec4 mv=modelViewMatrix*vec4(position,1.0);
+  vViewPos=-mv.xyz;
+  vNormal=normalize(normalMatrix*normal);
+  gl_Position=projectionMatrix*mv;
 }`;
 
-const FRAG_PBR = `
+const VERT_OUTLINE = `
+uniform float uWidth;
+void main(){
+  vec3 n=normalize(normalMatrix*normal);
+  vec4 mv=modelViewMatrix*vec4(position,1.0);
+  mv.xyz+=n*uWidth;
+  gl_Position=projectionMatrix*mv;
+}`;
+
+const FRAG_OUTLINE=`
+uniform vec3 uColor;
+void main(){ gl_FragColor=vec4(uColor,1.0); }`;
+
+const FRAG_PBR=`
 uniform sampler2D uTex;
 uniform vec3 uLight;
 uniform float uAmb,uDif,uRough;
 uniform bool uUseTex;
 varying vec2 vUv; varying vec3 vNormal,vViewPos;
 void main(){
-  vec3 base = uUseTex ? texture2D(uTex,vUv).rgb : vec3(0.72,0.68,0.82);
+  vec3 base=uUseTex?texture2D(uTex,vUv).rgb:vec3(0.68,0.72,0.88);
   vec3 N=normalize(vNormal),L=normalize(uLight),V=normalize(vViewPos),H=normalize(L+V);
   float diff=max(dot(N,L),0.0)*uDif;
   float gloss=max(1.0-uRough*uRough,0.01);
-  float spec=pow(max(dot(N,H),0.0),gloss*64.0)*0.4*(1.0-uRough);
-  gl_FragColor=vec4(clamp(base*(uAmb+diff)+vec3(spec),0.0,1.0),1.0);
+  float spec=pow(max(dot(N,H),0.0),gloss*64.0)*0.5*(1.0-uRough);
+  gl_FragColor=vec4(clamp(base*(uAmb+diff)+spec,0.0,1.0),1.0);
 }`;
 
-const FRAG_NINTENDO = `
+const FRAG_NINTENDO=`
 uniform sampler2D uTex;
 uniform vec3 uLight;
 uniform float uAmb,uDif,uBands,uRim,uSpec;
 uniform bool uUseTex;
 varying vec2 vUv; varying vec3 vNormal,vViewPos;
 void main(){
-  vec3 base = uUseTex ? texture2D(uTex,vUv).rgb : vec3(0.38,0.78,0.45);
+  vec3 base=uUseTex?texture2D(uTex,vUv).rgb:vec3(0.35,0.78,0.42);
   vec3 N=normalize(vNormal),L=normalize(uLight),V=normalize(vViewPos);
   float diff=max(dot(N,L),0.0)*uDif;
-  float stepped=floor(diff*uBands)/uBands;
+  float stepped=floor(diff*uBands+0.5)/uBands;
   float spec=step(1.0-uSpec,pow(max(dot(reflect(-L,N),V),0.0),32.0));
-  float rim=step(0.4,pow(1.0-max(dot(N,V),0.0),3.0)*uRim)*uRim;
-  gl_FragColor=vec4(clamp(base*(uAmb+stepped)+vec3(spec*0.8+rim*0.4),0.0,1.0),1.0);
+  float rim=step(0.55,1.0-max(dot(N,V),0.0))*uRim*0.6;
+  vec3 col=base*(uAmb+stepped)+vec3(spec*0.9)+vec3(rim);
+  gl_FragColor=vec4(clamp(col,0.0,1.0),1.0);
 }`;
 
-const FRAG_GENSHIN = `
+const FRAG_GENSHIN=`
 uniform sampler2D uTex;
 uniform vec3 uLight;
-uniform float uAmb,uHard,uShcol,uRim,uRimcol;
+uniform float uAmb,uDif,uHard,uSoftness,uShcol,uRim,uRimcol;
 uniform bool uUseTex;
 varying vec2 vUv; varying vec3 vNormal,vViewPos;
 void main(){
-  vec3 base = uUseTex ? texture2D(uTex,vUv).rgb : vec3(0.88,0.45,0.62);
+  vec3 base=uUseTex?texture2D(uTex,vUv).rgb:vec3(0.90,0.42,0.60);
   vec3 N=normalize(vNormal),L=normalize(uLight),V=normalize(vViewPos);
-  float diff=max(dot(N,L),0.0);
-  float shadow=smoothstep(uHard-0.03,uHard+0.03,diff);
-  vec3 tint=mix(vec3(0.62,0.67,0.85),vec3(1.0),uShcol);
-  vec3 col=mix(base*tint,base,shadow)*(uAmb+shadow*(1.0-uAmb));
-  float rim=smoothstep(0.5,0.7,pow(1.0-max(dot(N,V),0.0),4.0)*uRim)*0.6;
-  col+=mix(vec3(1.0),vec3(1.0,0.85,0.6),uRimcol)*rim;
+  float diff=max(dot(N,L),0.0)*uDif;
+  // Smooth shadow boundary with controllable softness
+  float soft=max(uSoftness*0.25,0.005);
+  float shadow=smoothstep(uHard-soft,uHard+soft,diff);
+  vec3 shadowTint=mix(vec3(0.55,0.60,0.82),vec3(1.0),uShcol);
+  // Lit area gets full diffuse; shadow area gets tint
+  vec3 col=mix(base*shadowTint,base,shadow);
+  col=col*(uAmb+diff*(1.0-uAmb));
+  // Rim light
+  float rim=smoothstep(0.45,0.75,1.0-max(dot(N,V),0.0))*uRim*0.7;
+  col+=mix(vec3(1.0),vec3(1.0,0.82,0.55),uRimcol)*rim;
   gl_FragColor=vec4(clamp(col,0.0,1.0),1.0);
 }`;
 
@@ -115,11 +133,10 @@ function parseOBJ(text){
   return {positions:new Float32Array(oP),uvs:new Float32Array(oU),normals:new Float32Array(oN)};
 }
 
-// ── Init scenes + cameras (once) ────────────────────────
+// ── Init scenes ─────────────────────────────────────────
 function initScenes(){
   KEYS.forEach(key=>{
     const scene=new THREE.Scene();
-    scene.add(new THREE.AmbientLight(0xffffff,0.05));
     scenes[key]=scene;
     const cam=new THREE.PerspectiveCamera(35,1,0.01,100);
     cam.position.set(0,0,3.5);
@@ -128,11 +145,21 @@ function initScenes(){
   });
 }
 
-// ── Build one set of canvases into a slot ────────────────
+// ── Outline material ─────────────────────────────────────
+function makeOutlineMat(){
+  return new THREE.ShaderMaterial({
+    vertexShader:VERT_OUTLINE,
+    fragmentShader:FRAG_OUTLINE,
+    uniforms:{uWidth:{value:0.04},uColor:{value:new THREE.Color(0x1a1916)}},
+    side:THREE.BackSide
+  });
+}
+
+// ── Build slot ───────────────────────────────────────────
 function buildSlot(slot){
   const row=document.createElement('div');
   row.className='sphere-row';
-  row.style.cssText='display:flex;align-items:flex-end;gap:1.5rem;justify-content:center;margin-bottom:.75rem;';
+  row.style.cssText='display:flex;align-items:flex-end;gap:1.5rem;justify-content:center;margin-bottom:.75rem;cursor:grab;';
 
   KEYS.forEach(key=>{
     const col=document.createElement('div');
@@ -141,92 +168,95 @@ function buildSlot(slot){
     const canvas=document.createElement('canvas');
     canvas.width=SIZE*DPR; canvas.height=SIZE*DPR;
     canvas.style.width=SIZE+'px'; canvas.style.height=SIZE+'px';
-    canvas.style.borderRadius='8px';
+    canvas.style.cssText+=';border-radius:8px;display:block;';
 
-    const renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:false});
+    const renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:true});
     renderer.setPixelRatio(DPR);
     renderer.setSize(SIZE,SIZE);
-    renderer.setClearColor(getBgColor(),1);
+    renderer.setClearColor(0x000000,0); // transparent
     renderers[key].push(renderer);
 
     const label=document.createElement('div');
-    label.className='sph-label';
-    label.style.color=COLORS[key];
-    label.textContent=LABELS[key];
-
+    label.className='sph-label'; label.style.color=COLORS[key]; label.textContent=LABELS[key];
     const sub=document.createElement('div');
-    sub.className='sph-sub';
-    sub.textContent=SUBS[key];
+    sub.className='sph-sub'; sub.textContent=SUBS[key];
 
-    col.appendChild(canvas);
-    col.appendChild(label);
-    col.appendChild(sub);
+    col.appendChild(canvas); col.appendChild(label); col.appendChild(sub);
     row.appendChild(col);
   });
-
-  // Drag to rotate
-  let dp=null;
-  row.style.cursor='grab';
-  row.addEventListener('mousedown',e=>{dp={x:e.clientX,y:e.clientY};row.style.cursor='grabbing';e.preventDefault();});
-  window.addEventListener('mousemove',e=>{
-    if(!dp)return;
-    rotY+=(e.clientX-dp.x)*0.006;
-    rotX+=(e.clientY-dp.y)*0.006;
-    rotX=Math.max(-Math.PI/3,Math.min(Math.PI/3,rotX));
-    dp={x:e.clientX,y:e.clientY};
-    updateRot(); drawAll();
-  });
-  window.addEventListener('mouseup',()=>{if(dp){dp=null;row.style.cursor='grab';}});
-  row.addEventListener('touchstart',e=>{const t=e.touches[0];dp={x:t.clientX,y:t.clientY};},{passive:true});
-  window.addEventListener('touchmove',e=>{
-    if(!dp)return;
-    const t=e.touches[0];
-    rotY+=(t.clientX-dp.x)*0.006;
-    rotX+=(t.clientY-dp.y)*0.006;
-    rotX=Math.max(-Math.PI/3,Math.min(Math.PI/3,rotX));
-    dp={x:t.clientX,y:t.clientY};
-    updateRot(); drawAll();
-  },{passive:true});
-  window.addEventListener('touchend',()=>{dp=null;});
 
   slot.insertBefore(row,slot.firstChild);
 }
 
-// ── Build all slots ──────────────────────────────────────
 function buildAllSlots(){
   document.querySelectorAll('.display-slot').forEach(slot=>buildSlot(slot));
 }
+
+// ── Global drag handler ──────────────────────────────────
+window.addEventListener('mousedown',e=>{
+  if(e.target.closest('.sphere-row')){
+    dragging=true; dragLast={x:e.clientX,y:e.clientY};
+    document.querySelectorAll('.sphere-row').forEach(r=>r.style.cursor='grabbing');
+    e.preventDefault();
+  }
+});
+window.addEventListener('mousemove',e=>{
+  if(!dragging) return;
+  const dx=e.clientX-dragLast.x, dy=e.clientY-dragLast.y;
+  rotY+=dx*0.007; rotX+=dy*0.007;
+  rotX=Math.max(-Math.PI/3,Math.min(Math.PI/3,rotX));
+  dragLast={x:e.clientX,y:e.clientY};
+  updateRot(); drawAll();
+});
+window.addEventListener('mouseup',()=>{
+  dragging=false;
+  document.querySelectorAll('.sphere-row').forEach(r=>r.style.cursor='grab');
+});
+window.addEventListener('touchstart',e=>{
+  if(e.target.closest('.sphere-row')){
+    dragging=true; const t=e.touches[0]; dragLast={x:t.clientX,y:t.clientY};
+  }
+},{passive:true});
+window.addEventListener('touchmove',e=>{
+  if(!dragging) return;
+  const t=e.touches[0], dx=t.clientX-dragLast.x, dy=t.clientY-dragLast.y;
+  rotY+=dx*0.007; rotX+=dy*0.007;
+  rotX=Math.max(-Math.PI/3,Math.min(Math.PI/3,rotX));
+  dragLast={x:t.clientX,y:t.clientY};
+  updateRot(); drawAll();
+},{passive:true});
+window.addEventListener('touchend',()=>{dragging=false;});
 
 // ── Rebuild meshes ───────────────────────────────────────
 function rebuildMeshes(geo){
   if(!geo||!sharedMats) return;
   KEYS.forEach(key=>{
     if(meshes[key]) scenes[key].remove(meshes[key]);
-    meshes[key]=new THREE.Mesh(geo,sharedMats[key]);
-    scenes[key].add(meshes[key]);
+    if(outlineMeshes[key]) scenes[key].remove(outlineMeshes[key]);
+    const m=new THREE.Mesh(geo,sharedMats[key]);
+    meshes[key]=m; scenes[key].add(m);
+    const om=new THREE.Mesh(geo,makeOutlineMat());
+    outlineMeshes[key]=om; scenes[key].add(om);
   });
-  updateRot();
-  drawAll();
+  updateRot(); updateOutline(); drawAll();
 }
 
-// ── Load texture + model ─────────────────────────────────
+// ── Load assets ──────────────────────────────────────────
 function loadAssets(){
   const tex=new THREE.TextureLoader().load('hair_diffuse.png',()=>drawAll());
 
   uniforms.pbr={uTex:{value:tex},uLight:{value:getLight()},uAmb:{value:S.amb},uDif:{value:S.dif},uRough:{value:S.rough},uUseTex:{value:false}};
   uniforms.nintendo={uTex:{value:tex},uLight:{value:getLight()},uAmb:{value:S.amb},uDif:{value:S.dif},uBands:{value:S.bands},uRim:{value:S.rim},uSpec:{value:S.spec},uUseTex:{value:false}};
-  uniforms.genshin={uTex:{value:tex},uLight:{value:getLight()},uAmb:{value:S.amb},uHard:{value:S.hard},uShcol:{value:S.shcol},uRim:{value:S.rim},uRimcol:{value:S.rimcol},uUseTex:{value:false}};
+  uniforms.genshin={uTex:{value:tex},uLight:{value:getLight()},uAmb:{value:S.amb},uDif:{value:S.dif},uHard:{value:S.hard},uSoftness:{value:S.softness},uShcol:{value:S.shcol},uRim:{value:S.rim},uRimcol:{value:S.rimcol},uUseTex:{value:false}};
 
   sharedMats={
-    pbr:     new THREE.ShaderMaterial({vertexShader:VERT,fragmentShader:FRAG_PBR,    uniforms:uniforms.pbr,    side:THREE.DoubleSide}),
-    nintendo:new THREE.ShaderMaterial({vertexShader:VERT,fragmentShader:FRAG_NINTENDO,uniforms:uniforms.nintendo,side:THREE.DoubleSide}),
-    genshin: new THREE.ShaderMaterial({vertexShader:VERT,fragmentShader:FRAG_GENSHIN, uniforms:uniforms.genshin, side:THREE.DoubleSide})
+    pbr:     new THREE.ShaderMaterial({vertexShader:VERT,fragmentShader:FRAG_PBR,    uniforms:uniforms.pbr,    side:THREE.FrontSide}),
+    nintendo:new THREE.ShaderMaterial({vertexShader:VERT,fragmentShader:FRAG_NINTENDO,uniforms:uniforms.nintendo,side:THREE.FrontSide}),
+    genshin: new THREE.ShaderMaterial({vertexShader:VERT,fragmentShader:FRAG_GENSHIN, uniforms:uniforms.genshin, side:THREE.FrontSide})
   };
 
-  // Start with sphere
   rebuildMeshes(new THREE.SphereGeometry(1,64,64));
 
-  // Load OBJ in background
   fetch('lumine_hair.obj').then(r=>r.text()).then(text=>{
     const {positions,uvs,normals}=parseOBJ(text);
     const geo=new THREE.BufferGeometry();
@@ -237,37 +267,42 @@ function loadAssets(){
     const c=new THREE.Vector3(); geo.boundingBox.getCenter(c);
     geo.translate(-c.x,-c.y,-c.z);
     geo.computeBoundingSphere();
-    geo.scale(1.2/geo.boundingSphere.radius,1.2/geo.boundingSphere.radius,1.2/geo.boundingSphere.radius);
-    const ua=geo.attributes.uv.array;
-    for(let i=1;i<ua.length;i+=2) ua[i]=1-ua[i];
-    geo.attributes.uv.needsUpdate=true;
+    const s=1.2/geo.boundingSphere.radius;
+    geo.scale(s,s,s);
     objGeometry=geo;
-    if(S.shape==='custom'){
-      KEYS.forEach(k=>uniforms[k].uUseTex.value=true);
-      rebuildMeshes(objGeometry);
-    }
-  }).catch(()=>console.warn('OBJ load failed'));
+    if(S.shape==='custom'){KEYS.forEach(k=>{if(uniforms[k])uniforms[k].uUseTex.value=true;});rebuildMeshes(objGeometry);}
+  }).catch(()=>{});
 }
 
-// ── Update rotation ──────────────────────────────────────
+// ── Update helpers ───────────────────────────────────────
 function updateRot(){
-  KEYS.forEach(key=>{if(meshes[key]){meshes[key].rotation.x=rotX;meshes[key].rotation.y=rotY;}});
+  KEYS.forEach(key=>{
+    if(meshes[key]){meshes[key].rotation.x=rotX;meshes[key].rotation.y=rotY;}
+    if(outlineMeshes[key]){outlineMeshes[key].rotation.x=rotX;outlineMeshes[key].rotation.y=rotY;}
+  });
 }
 
-// ── Update uniforms ──────────────────────────────────────
+function updateOutline(){
+  KEYS.forEach(key=>{
+    if(!outlineMeshes[key]) return;
+    const mat=outlineMeshes[key].material;
+    mat.uniforms.uWidth.value=S.olt*0.012;
+    mat.visible=S.omode!=='none';
+  });
+}
+
 function updateUniforms(){
   const L=getLight();
-  if(uniforms.pbr){Object.assign(uniforms.pbr.uLight,{value:L});uniforms.pbr.uAmb.value=S.amb;uniforms.pbr.uDif.value=S.dif;uniforms.pbr.uRough.value=S.rough;}
+  if(uniforms.pbr){uniforms.pbr.uLight.value=L;uniforms.pbr.uAmb.value=S.amb;uniforms.pbr.uDif.value=S.dif;uniforms.pbr.uRough.value=S.rough;}
   if(uniforms.nintendo){uniforms.nintendo.uLight.value=L;uniforms.nintendo.uAmb.value=S.amb;uniforms.nintendo.uDif.value=S.dif;uniforms.nintendo.uBands.value=S.bands;uniforms.nintendo.uRim.value=S.rim;uniforms.nintendo.uSpec.value=S.spec;}
-  if(uniforms.genshin){uniforms.genshin.uLight.value=L;uniforms.genshin.uAmb.value=S.amb;uniforms.genshin.uHard.value=S.hard;uniforms.genshin.uShcol.value=S.shcol;uniforms.genshin.uRim.value=S.rim;uniforms.genshin.uRimcol.value=S.rimcol;}
+  if(uniforms.genshin){uniforms.genshin.uLight.value=L;uniforms.genshin.uAmb.value=S.amb;uniforms.genshin.uDif.value=S.dif;uniforms.genshin.uHard.value=S.hard;uniforms.genshin.uSoftness.value=S.softness;uniforms.genshin.uShcol.value=S.shcol;uniforms.genshin.uRim.value=S.rim;uniforms.genshin.uRimcol.value=S.rimcol;}
 }
 
 // ── Draw all ─────────────────────────────────────────────
 function drawAll(){
-  updateUniforms();
-  const bg=getBgColor();
+  updateUniforms(); updateOutline();
   KEYS.forEach(key=>{
-    (renderers[key]||[]).forEach(r=>{r.setClearColor(bg,1);r.render(scenes[key],cameras[key]);});
+    (renderers[key]||[]).forEach(r=>{r.render(scenes[key],cameras[key]);});
   });
   const L=getLight();
   const ld=document.getElementById('ldir');
@@ -287,6 +322,7 @@ wire('sl-amb','amb',v=>v.toFixed(2));
 wire('sl-dif','dif',v=>v.toFixed(2));
 wire('sl-az-sh','azSh',v=>Math.round(v)+'°');
 wire('sl-hard','hard',v=>v.toFixed(2));
+wire('sl-softness','softness',v=>v.toFixed(2));
 wire('sl-shcol','shcol',v=>v.toFixed(2));
 wire('sl-bands','bands',v=>Math.round(v)+'');
 wire('sl-rough','rough',v=>v.toFixed(2));
@@ -295,65 +331,43 @@ wire('sl-rimcol','rimcol',v=>v.toFixed(2));
 wire('sl-spec','spec',v=>v.toFixed(3));
 wire('sl-shcol2','shcol2',v=>v.toFixed(2));
 wire('sl-facemap','facemap',v=>v.toFixed(2));
-wire('sl-olt','olt',v=>v.toFixed(1));
+wire('sl-olt','olt',v=>{updateOutline();return v.toFixed(1);});
 wire('sl-oltsens','oltsens',v=>v.toFixed(2));
 wire('sl-normedge','normedge',v=>v.toFixed(2));
 
-// ── Scene toggle ─────────────────────────────────────────
-document.getElementById('bg-seg').querySelectorAll('button').forEach(btn=>{
-  btn.addEventListener('click',()=>{
-    document.getElementById('bg-seg').querySelectorAll('button').forEach(b=>b.classList.remove('on'));
-    btn.classList.add('on'); S.bg=btn.dataset.val; drawAll();
+// ── Toggles ──────────────────────────────────────────────
+function wireSeg(id,key,cb){
+  document.getElementById(id)&&document.getElementById(id).querySelectorAll('button').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      document.getElementById(id).querySelectorAll('button').forEach(b=>b.classList.remove('on'));
+      btn.classList.add('on'); S[key]=btn.dataset.val; if(cb)cb(); drawAll();
+    });
   });
-});
+}
+wireSeg('bg-seg','bg');
 
-// ── Shape toggle ─────────────────────────────────────────
-document.getElementById('shape-seg').querySelectorAll('button').forEach(btn=>{
+document.getElementById('shape-seg')&&document.getElementById('shape-seg').querySelectorAll('button').forEach(btn=>{
   btn.addEventListener('click',()=>{
     document.getElementById('shape-seg').querySelectorAll('button').forEach(b=>b.classList.remove('on'));
-    btn.classList.add('on');
-    S.shape=btn.dataset.val;
+    btn.classList.add('on'); S.shape=btn.dataset.val;
     if(!sharedMats) return;
     const isCustom=S.shape==='custom';
-    KEYS.forEach(k=>{if(uniforms[k]) uniforms[k].uUseTex.value=isCustom;});
-    const geo=isCustom ? objGeometry : new THREE.SphereGeometry(1,64,64);
-    if(geo) rebuildMeshes(geo);
+    KEYS.forEach(k=>{if(uniforms[k])uniforms[k].uUseTex.value=isCustom;});
+    rebuildMeshes(isCustom&&objGeometry ? objGeometry : new THREE.SphereGeometry(1,64,64));
   });
 });
 
-// ── Chip wiring ──────────────────────────────────────────
-document.querySelectorAll('[data-smode]').forEach(btn=>{
-  btn.addEventListener('click',()=>{document.querySelectorAll('[data-smode]').forEach(b=>b.classList.remove('on'));btn.classList.add('on');S.shadowMode=btn.dataset.smode;drawAll();});
-});
-document.querySelectorAll('[data-omode]').forEach(btn=>{
-  btn.addEventListener('click',()=>{document.querySelectorAll('[data-omode]').forEach(b=>b.classList.remove('on'));btn.classList.add('on');S.omode=btn.dataset.omode;drawAll();});
-});
-document.querySelectorAll('[data-ocol]').forEach(btn=>{
-  btn.addEventListener('click',()=>{document.querySelectorAll('[data-ocol]').forEach(b=>b.classList.remove('on'));btn.classList.add('on');S.ocol=btn.dataset.ocol;drawAll();});
-});
+document.querySelectorAll('[data-smode]').forEach(btn=>{btn.addEventListener('click',()=>{document.querySelectorAll('[data-smode]').forEach(b=>b.classList.remove('on'));btn.classList.add('on');S.shadowMode=btn.dataset.smode;drawAll();});});
+document.querySelectorAll('[data-omode]').forEach(btn=>{btn.addEventListener('click',()=>{document.querySelectorAll('[data-omode]').forEach(b=>b.classList.remove('on'));btn.classList.add('on');S.omode=btn.dataset.omode;updateOutline();drawAll();});});
+document.querySelectorAll('[data-ocol]').forEach(btn=>{btn.addEventListener('click',()=>{document.querySelectorAll('[data-ocol]').forEach(b=>b.classList.remove('on'));btn.classList.add('on');S.ocol=btn.dataset.ocol;drawAll();});});
 
 // ── Section observer ─────────────────────────────────────
 const secIndicator=document.getElementById('viewer-section');
-new IntersectionObserver(entries=>{
-  entries.forEach(e=>{if(e.isIntersecting){S.tab=e.target.dataset.tab;if(secIndicator)secIndicator.textContent=S.tab;}});
-},{root:null,rootMargin:'-20% 0px -20% 0px',threshold:0})
-.observe;
 document.querySelectorAll('.story-sec').forEach(sec=>{
   new IntersectionObserver(entries=>{
     entries.forEach(e=>{if(e.isIntersecting){S.tab=e.target.dataset.tab;if(secIndicator)secIndicator.textContent=S.tab;}});
   },{root:null,rootMargin:'-20% 0px -20% 0px',threshold:0}).observe(sec);
 });
-
-// ── Auto-rotate ──────────────────────────────────────────
-let autoRotating=true, lastDrag=0;
-function autoRotate(){
-  if(autoRotating&&Date.now()-lastDrag>2000){rotY+=0.003;updateRot();drawAll();}
-  requestAnimationFrame(autoRotate);
-}
-document.querySelectorAll('.sphere-row').forEach(r=>{
-  r.addEventListener('mousedown',()=>{lastDrag=Date.now();autoRotating=false;});
-});
-window.addEventListener('mouseup',()=>{autoRotating=true;lastDrag=Date.now();});
 
 // ── Scroll reveal + progress bar ─────────────────────────
 const progressBar=document.getElementById('progress-bar');
@@ -373,4 +387,3 @@ setTimeout(()=>{
 initScenes();
 buildAllSlots();
 loadAssets();
-autoRotate();

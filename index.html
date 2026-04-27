@@ -11,6 +11,8 @@
 
   <div id="progress-bar"></div>
 
+  <span id="viewer-section" style="display:none">lighting</span>
+
   <!-- ── Topbar ──────────────────────────────────────── -->
   <header class="topbar">
     <h1>Stylized Cel-Shading</h1>
@@ -115,7 +117,11 @@
           <button class="chip" data-smode="facemap">Shadow Map</button>
         </div>
         <div class="slrow">
-          <div class="sltop"><span class="slname">Edge sharpness</span><span class="slval" id="v-hard">0.92</span></div>
+          <div class="sltop"><span class="slname">Shadow softness</span><span class="slval" id="v-softness">0.10</span></div>
+          <input type="range" id="sl-softness" min="0.01" max="1" step="0.01" value="0.1" />
+        </div>
+        <div class="slrow">
+          <div class="sltop"><span class="slname">Edge sharpness</span><span class="slval" id="v-hard">0.60</span></div>
           <input type="range" id="sl-hard" min="0" max="1" step="0.01" value="0.92" />
         </div>
         <div class="slrow">
