@@ -42,6 +42,7 @@
       <h2 class="sec-q">Why does Genshin Impact look the way it looks?</h2>
       <h3 style="font-family:Georgia,'Times New Roman',serif;font-size:clamp(16px,1.6vw,24px);font-weight:400;color:var(--txt2);letter-spacing:-.015em;margin-bottom:1.5rem;">Toon shading is a deliberate choice to look less real.</h3>
       <p class="sec-body">Modern anime-style games often recreate the look of hand-drawn animation inside a 3D environment. One of the most recognizable examples is Genshin Impact, developed by HoYoverse. Instead of fully realistic rendering, the game uses stylized shading techniques that simplify lighting, shadows, and outlines to mimic anime illustration. <a href="https://youtu.be/-JFyAdI_rO8?si=EAzZOlP2O_qg6gDA" target="_blank" class="cite-link">[1]</a></p>
+      <p class="sec-body">A core part of HoYoverse's philosophy is finding the right balance — not chasing ultra-realistic visuals, but instead refining quality while keeping the game's expressive art style and making sure it runs well for players across all kinds of devices. The result is a visual language designed to be both beautiful and broadly accessible. <a href="https://youtu.be/2iu7xGqiNzM?t=844" target="_blank" class="cite-link">[3]</a></p>
       <p class="sec-body">Although the visuals appear simple, the style depends on a careful balance between technical rendering systems and artistic direction. By simplifying how light interacts with surfaces, the developers maintain strong colors, clear silhouettes, and expressive materials.</p>
     </section>
 
@@ -160,9 +161,38 @@
       <h2 class="sec-q">Stylized Metals and Highlights</h2>
       <p class="sec-body">Materials such as metal surfaces are also stylized to match the overall art direction. Instead of using complex reflections, many objects rely on exaggerated highlights that move across the surface when lighting changes. These highlights suggest shininess while maintaining performance and ensuring that the material style remains consistent with the rest of the visual design.</p>
 
+      <blockquote class="gdc-quote">
+        <p>"The goal is not to have something ultra-realistic, but to refine and improve the quality, maintain the game's recognizable art style, and keep it accessible across platforms."</p>
+        <cite>— HoYoverse R&D Engineer, <a href="https://youtu.be/2iu7xGqiNzM?t=844" target="_blank" class="cite-link">Behind the Scenes: To Snezhnaya and the Future [3]</a></cite>
+      </blockquote>
+
+      <div class="sec-sub-label" style="margin-bottom:.75rem;">Behind the textures</div>
+      <div class="tex-row">
+        <div class="tex-col">
+          <img src="hair_diffuse.png" alt="Diffuse texture" />
+          <div class="tex-label">Diffuse</div>
+          <div class="tex-hint">Base color of the surface</div>
+        </div>
+        <div class="tex-col">
+          <img src="hair_lightmap.png" alt="Lightmap texture" />
+          <div class="tex-label">Lightmap</div>
+          <div class="tex-hint">R = specular · G = shadow threshold · B = material type</div>
+        </div>
+        <div class="tex-col">
+          <img src="hair_normal.png" alt="Normal map texture" />
+          <div class="tex-label">Normal Map</div>
+          <div class="tex-hint">Encodes surface direction for shading detail</div>
+        </div>
+      </div>
+
       <figure>
         <img src="metal.gif" alt="Stylized metal highlights" />
         <figcaption>Exaggerated specular highlights shift across the surface as the light direction changes.</figcaption>
+      </figure>
+
+      <figure>
+        <img src="metal-matcap.png" alt="Metal matcap texture" />
+        <figcaption>A matcap (material capture) texture used in Genshin Impact to simulate metallic reflections. Instead of calculating real reflections, the shading system maps the surface normal to this image to look up the highlight color — giving the appearance of shine without the cost.</figcaption>
       </figure>
 
       <div class="display-slot">
@@ -198,6 +228,7 @@
         <ol class="sources-list">
           <li><a href="https://youtu.be/-JFyAdI_rO8?si=EAzZOlP2O_qg6gDA" target="_blank">Genshin Impact: Crafting an Anime-Style Open World — GDC Talk, HoYoverse</a></li>
           <li><a href="https://nugglet.github.io/posts/2022/12/console_graphics_rendering_pipeline_genshin_impact" target="_blank">Genshin Impact: Console Graphics Rendering Pipeline — nugglet</a></li>
+          <li><a href="https://youtu.be/2iu7xGqiNzM?t=844" target="_blank">Behind the Scenes of Genshin Impact: To Snezhnaya and the Future — HoYoverse</a></li>
           <li>The Legend of Zelda: Breath of the Wild — Nintendo, 2017</li>
           <li>Genshin Impact — HoYoverse, 2020</li>
         </ol>

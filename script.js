@@ -112,8 +112,7 @@ function initScenes(){
 // ── Outline material ─────────────────────────────────────
 function makeOutlineMat(){
   return new THREE.ShaderMaterial({
-    vertexShader:VERT_OUTLINE,
-    fragmentShader:FRAG_OUTLINE,
+    vertexShader:VERT_OUTLINE, fragmentShader:FRAG_OUTLINE,
     uniforms:{uWidth:{value:0.04},uColor:{value:new THREE.Color(0x1a1916)}},
     side:THREE.BackSide
   });
@@ -124,34 +123,26 @@ function buildSlot(slot){
   const row=document.createElement('div');
   row.className='sphere-row';
   row.style.cssText='display:flex;align-items:flex-end;gap:1.5rem;justify-content:center;margin-bottom:.75rem;cursor:grab;';
-
   KEYS.forEach(key=>{
     const col=document.createElement('div');
     col.style.cssText='display:flex;flex-direction:column;align-items:center;gap:.3rem;';
-
     const canvas=document.createElement('canvas');
     canvas.width=SIZE*DPR; canvas.height=SIZE*DPR;
     canvas.style.width=SIZE+'px'; canvas.style.height=SIZE+'px';
     canvas.style.borderRadius='8px';
-
     const renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:true});
-    renderer.setPixelRatio(DPR);
-    renderer.setSize(SIZE,SIZE);
+    renderer.setPixelRatio(DPR); renderer.setSize(SIZE,SIZE);
     renderer.setClearColor(0x000000,0);
     renderers[key].push(renderer);
-
     const label=document.createElement('div');
     label.className='sph-label'; label.style.color=COLORS[key]; label.textContent=LABELS[key];
     const sub=document.createElement('div');
     sub.className='sph-sub'; sub.textContent=SUBS[key];
-
     col.appendChild(canvas); col.appendChild(label); col.appendChild(sub);
     row.appendChild(col);
   });
-
   slot.insertBefore(row,slot.firstChild);
 }
-
 function buildAllSlots(){
   document.querySelectorAll('.display-slot').forEach(slot=>buildSlot(slot));
 }
@@ -209,13 +200,11 @@ function loadAssets(){
   uniforms.pbr={uLight:{value:getLight()},uAmb:{value:S.amb},uDif:{value:S.dif},uRough:{value:S.rough}};
   uniforms.nintendo={uLight:{value:getLight()},uAmb:{value:S.amb},uDif:{value:S.dif},uBands:{value:S.bands},uRim:{value:S.rim},uSpec:{value:S.spec}};
   uniforms.genshin={uLight:{value:getLight()},uAmb:{value:S.amb},uDif:{value:S.dif},uHard:{value:S.hard},uSoftness:{value:S.softness},uShcol:{value:S.shcol},uRim:{value:S.rim},uRimcol:{value:S.rimcol},uBands:{value:S.bands}};
-
   sharedMats={
     pbr:     new THREE.ShaderMaterial({vertexShader:VERT,fragmentShader:FRAG_PBR,    uniforms:uniforms.pbr,    side:THREE.FrontSide}),
     nintendo:new THREE.ShaderMaterial({vertexShader:VERT,fragmentShader:FRAG_NINTENDO,uniforms:uniforms.nintendo,side:THREE.FrontSide}),
     genshin: new THREE.ShaderMaterial({vertexShader:VERT,fragmentShader:FRAG_GENSHIN, uniforms:uniforms.genshin, side:THREE.FrontSide})
   };
-
   rebuildMeshes(new THREE.SphereGeometry(1,64,64));
 }
 
@@ -226,34 +215,18 @@ function updateRot(){
     if(outlineMeshes[key]){outlineMeshes[key].rotation.x=rotX;outlineMeshes[key].rotation.y=rotY;}
   });
 }
-
 function updateOutline(){
   KEYS.forEach(key=>{
     if(!outlineMeshes[key]) return;
-    const mat=outlineMeshes[key].material;
-    mat.uniforms.uWidth.value=S.olt*0.012;
-    mat.visible=S.omode!=='none';
+    outlineMeshes[key].material.uniforms.uWidth.value=S.olt*0.012;
+    outlineMeshes[key].material.visible=S.omode!=='none';
   });
 }
-
 function updateUniforms(){
   const L=getLight();
-  if(uniforms.pbr){
-    uniforms.pbr.uLight.value=L; uniforms.pbr.uAmb.value=S.amb;
-    uniforms.pbr.uDif.value=S.dif; uniforms.pbr.uRough.value=S.rough;
-  }
-  if(uniforms.nintendo){
-    uniforms.nintendo.uLight.value=L; uniforms.nintendo.uAmb.value=S.amb;
-    uniforms.nintendo.uDif.value=S.dif; uniforms.nintendo.uBands.value=S.bands;
-    uniforms.nintendo.uRim.value=S.rim; uniforms.nintendo.uSpec.value=S.spec;
-  }
-  if(uniforms.genshin){
-    uniforms.genshin.uLight.value=L; uniforms.genshin.uAmb.value=S.amb;
-    uniforms.genshin.uDif.value=S.dif; uniforms.genshin.uHard.value=S.hard;
-    uniforms.genshin.uSoftness.value=S.softness; uniforms.genshin.uShcol.value=S.shcol;
-    uniforms.genshin.uRim.value=S.rim; uniforms.genshin.uRimcol.value=S.rimcol;
-    uniforms.genshin.uBands.value=S.bands;
-  }
+  if(uniforms.pbr){uniforms.pbr.uLight.value=L;uniforms.pbr.uAmb.value=S.amb;uniforms.pbr.uDif.value=S.dif;uniforms.pbr.uRough.value=S.rough;}
+  if(uniforms.nintendo){uniforms.nintendo.uLight.value=L;uniforms.nintendo.uAmb.value=S.amb;uniforms.nintendo.uDif.value=S.dif;uniforms.nintendo.uBands.value=S.bands;uniforms.nintendo.uRim.value=S.rim;uniforms.nintendo.uSpec.value=S.spec;}
+  if(uniforms.genshin){uniforms.genshin.uLight.value=L;uniforms.genshin.uAmb.value=S.amb;uniforms.genshin.uDif.value=S.dif;uniforms.genshin.uHard.value=S.hard;uniforms.genshin.uSoftness.value=S.softness;uniforms.genshin.uShcol.value=S.shcol;uniforms.genshin.uRim.value=S.rim;uniforms.genshin.uRimcol.value=S.rimcol;uniforms.genshin.uBands.value=S.bands;}
 }
 
 // ── Draw all ─────────────────────────────────────────────
@@ -274,19 +247,19 @@ function wire(id,key,fmt){
   if(!el) return;
   el.addEventListener('input',()=>{S[key]=+el.value;if(vl)vl.textContent=fmt(+el.value);drawAll();});
 }
-wire('sl-az',       'az',       v=>Math.round(v)+'°');
-wire('sl-el',       'el',       v=>Math.round(v)+'°');
-wire('sl-amb',      'amb',      v=>v.toFixed(2));
-wire('sl-dif',      'dif',      v=>v.toFixed(2));
-wire('sl-hard',     'hard',     v=>v.toFixed(2));
-wire('sl-softness', 'softness', v=>v.toFixed(2));
-wire('sl-shcol',    'shcol',    v=>v.toFixed(2));
-wire('sl-bands',    'bands',    v=>Math.round(v)+'');
-wire('sl-rough',    'rough',    v=>v.toFixed(2));
-wire('sl-rim',      'rim',      v=>v.toFixed(2));
-wire('sl-rimcol',   'rimcol',   v=>v.toFixed(2));
-wire('sl-spec',     'spec',     v=>v.toFixed(3));
-wire('sl-olt',      'olt',      v=>{updateOutline();return v.toFixed(1);});
+wire('sl-az','az',v=>Math.round(v)+'°');
+wire('sl-el','el',v=>Math.round(v)+'°');
+wire('sl-amb','amb',v=>v.toFixed(2));
+wire('sl-dif','dif',v=>v.toFixed(2));
+wire('sl-hard','hard',v=>v.toFixed(2));
+wire('sl-softness','softness',v=>v.toFixed(2));
+wire('sl-shcol','shcol',v=>v.toFixed(2));
+wire('sl-bands','bands',v=>Math.round(v)+'');
+wire('sl-rough','rough',v=>v.toFixed(2));
+wire('sl-rim','rim',v=>v.toFixed(2));
+wire('sl-rimcol','rimcol',v=>v.toFixed(2));
+wire('sl-spec','spec',v=>v.toFixed(3));
+wire('sl-olt','olt',v=>{updateOutline();return v.toFixed(1);});
 
 // ── Shape toggle ─────────────────────────────────────────
 document.getElementById('shape-seg')&&document.getElementById('shape-seg').querySelectorAll('button').forEach(btn=>{
@@ -324,7 +297,7 @@ const secIndicator=document.getElementById('viewer-section');
 document.querySelectorAll('.story-sec').forEach(sec=>{
   new IntersectionObserver(entries=>{
     entries.forEach(e=>{
-      if(e.isIntersecting){ S.tab=e.target.dataset.tab; if(secIndicator)secIndicator.textContent=S.tab; }
+      if(e.isIntersecting){S.tab=e.target.dataset.tab;if(secIndicator)secIndicator.textContent=S.tab;}
     });
   },{root:null,rootMargin:'-20% 0px -20% 0px',threshold:0}).observe(sec);
 });
@@ -345,8 +318,7 @@ setTimeout(()=>{
 
 // ── Comparison slider ─────────────────────────────────────
 function initCmp(id){
-  const el=document.getElementById(id);
-  if(!el) return;
+  const el=document.getElementById(id); if(!el) return;
   const left=el.querySelector('.cmp-left');
   const right=el.querySelector('.cmp-right');
   const divider=el.querySelector('.cmp-divider');
