@@ -185,15 +185,18 @@
         </div>
       </div>
 
-      <figure>
-        <img src="metal.gif" alt="Stylized metal highlights" />
-        <figcaption>Exaggerated specular highlights shift across the surface as the light direction changes.</figcaption>
-      </figure>
-
-      <figure>
-        <img src="metal-matcap.png" alt="Metal matcap texture" />
-        <figcaption>A matcap (material capture) texture used in Genshin Impact to simulate metallic reflections. Instead of calculating real reflections, the shading system maps the surface normal to this image to look up the highlight color — giving the appearance of shine without the cost.</figcaption>
-      </figure>
+      <div class="tex-row">
+        <div class="tex-col">
+          <img src="metal.gif" alt="Stylized metal highlights" />
+          <div class="tex-label">Metal highlights</div>
+          <div class="tex-hint">Exaggerated specular shifts across the surface as lighting changes.</div>
+        </div>
+        <div class="tex-col">
+          <img src="metal-matcap.png" alt="Metal matcap texture" />
+          <div class="tex-label">Matcap texture</div>
+          <div class="tex-hint">Surface normals map to this image to look up the highlight color — shine without real reflections.</div>
+        </div>
+      </div>
 
       <div class="display-slot">
         <div class="display-hint">drag to rotate</div>

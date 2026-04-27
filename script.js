@@ -89,12 +89,21 @@ void main(){
   vec3 base=vec3(0.90,0.42,0.60);
   vec3 N=normalize(vNormal),L=normalize(uLight),V=normalize(vViewPos);
   float diff=max(dot(N,L),0.0)*uDif;
-  float stepped=floor(diff*uBands)/uBands;
+  // Smooth shadow boundary — no hard stepping, that's Nintendo's thing
   float soft=max(uSoftness*0.2,0.008);
-  float shadow=smoothstep(uHard-soft,uHard+soft,stepped);
-  vec3 tint=mix(vec3(0.50,0.55,0.80),vec3(1.0),uShcol);
-  vec3 col=mix(base*tint*max(uAmb,0.35),base,shadow);
-  float rim=smoothstep(0.40,0.70,1.0-max(dot(N,V),0.0))*uRim*0.8;
+  float shadow=smoothstep(uHard-soft,uHard+soft,diff);
+  // uBands shifts the threshold so fewer bands = harder boundary
+  float threshold=uHard*(1.0-(uBands-1.0)*0.08);
+  shadow=smoothstep(threshold-soft,threshold+soft,diff);
+  // Cool tinted shadow — Genshin's defining characteristic
+  vec3 shadowTint=mix(vec3(0.45,0.52,0.82),vec3(1.0),uShcol);
+  vec3 col=mix(base*shadowTint,base,shadow);
+  col=col*(uAmb+diff*(1.0-uAmb));
+  // Stylized specular — softer than Nintendo's hard step
+  float spec=pow(max(dot(reflect(-L,N),V),0.0),24.0)*0.5*shadow;
+  col+=vec3(spec);
+  // Warm expressive rim light
+  float rim=smoothstep(0.38,0.68,1.0-max(dot(N,V),0.0))*uRim*0.85;
   col+=mix(vec3(1.0),vec3(1.0,0.80,0.50),uRimcol)*rim;
   gl_FragColor=vec4(clamp(col,0.0,1.0),1.0);
 }`;
@@ -198,12 +207,12 @@ function rebuildMeshes(geo){
 // ── Load assets ──────────────────────────────────────────
 function loadAssets(){
   uniforms.pbr={uLight:{value:getLight()},uAmb:{value:S.amb},uDif:{value:S.dif},uRough:{value:S.rough}};
-  uniforms.nintendo={uLight:{value:getLight()},uAmb:{value:S.amb},uDif:{value:S.dif},uBands:{value:S.bands},uRim:{value:S.rim},uSpec:{value:S.spec}};
-  uniforms.genshin={uLight:{value:getLight()},uAmb:{value:S.amb},uDif:{value:S.dif},uHard:{value:S.hard},uSoftness:{value:S.softness},uShcol:{value:S.shcol},uRim:{value:S.rim},uRimcol:{value:S.rimcol},uBands:{value:S.bands}};
+  uniforms.nintendo={uLight:{value:getLight()},uAmb:{value:S.amb},uDif:{value:S.dif},uHard:{value:S.hard},uSoftness:{value:S.softness},uShcol:{value:S.shcol},uRim:{value:S.rim},uRimcol:{value:S.rimcol},uBands:{value:S.bands}};
+  uniforms.genshin={uLight:{value:getLight()},uAmb:{value:S.amb},uDif:{value:S.dif},uBands:{value:S.bands},uRim:{value:S.rim},uSpec:{value:S.spec}};
   sharedMats={
     pbr:     new THREE.ShaderMaterial({vertexShader:VERT,fragmentShader:FRAG_PBR,    uniforms:uniforms.pbr,    side:THREE.FrontSide}),
-    nintendo:new THREE.ShaderMaterial({vertexShader:VERT,fragmentShader:FRAG_NINTENDO,uniforms:uniforms.nintendo,side:THREE.FrontSide}),
-    genshin: new THREE.ShaderMaterial({vertexShader:VERT,fragmentShader:FRAG_GENSHIN, uniforms:uniforms.genshin, side:THREE.FrontSide})
+    nintendo:new THREE.ShaderMaterial({vertexShader:VERT,fragmentShader:FRAG_GENSHIN,uniforms:uniforms.nintendo,side:THREE.FrontSide}),
+    genshin: new THREE.ShaderMaterial({vertexShader:VERT,fragmentShader:FRAG_NINTENDO,uniforms:uniforms.genshin, side:THREE.FrontSide})
   };
   rebuildMeshes(new THREE.SphereGeometry(1,64,64));
 }
@@ -225,8 +234,8 @@ function updateOutline(){
 function updateUniforms(){
   const L=getLight();
   if(uniforms.pbr){uniforms.pbr.uLight.value=L;uniforms.pbr.uAmb.value=S.amb;uniforms.pbr.uDif.value=S.dif;uniforms.pbr.uRough.value=S.rough;}
-  if(uniforms.nintendo){uniforms.nintendo.uLight.value=L;uniforms.nintendo.uAmb.value=S.amb;uniforms.nintendo.uDif.value=S.dif;uniforms.nintendo.uBands.value=S.bands;uniforms.nintendo.uRim.value=S.rim;uniforms.nintendo.uSpec.value=S.spec;}
-  if(uniforms.genshin){uniforms.genshin.uLight.value=L;uniforms.genshin.uAmb.value=S.amb;uniforms.genshin.uDif.value=S.dif;uniforms.genshin.uHard.value=S.hard;uniforms.genshin.uSoftness.value=S.softness;uniforms.genshin.uShcol.value=S.shcol;uniforms.genshin.uRim.value=S.rim;uniforms.genshin.uRimcol.value=S.rimcol;uniforms.genshin.uBands.value=S.bands;}
+  if(uniforms.nintendo){uniforms.nintendo.uLight.value=L;uniforms.nintendo.uAmb.value=S.amb;uniforms.nintendo.uDif.value=S.dif;uniforms.nintendo.uHard.value=S.hard;uniforms.nintendo.uSoftness.value=S.softness;uniforms.nintendo.uShcol.value=S.shcol;uniforms.nintendo.uRim.value=S.rim;uniforms.nintendo.uRimcol.value=S.rimcol;uniforms.nintendo.uBands.value=S.bands;}
+  if(uniforms.genshin){uniforms.genshin.uLight.value=L;uniforms.genshin.uAmb.value=S.amb;uniforms.genshin.uDif.value=S.dif;uniforms.genshin.uBands.value=S.bands;uniforms.genshin.uRim.value=S.rim;uniforms.genshin.uSpec.value=S.spec;}
 }
 
 // ── Draw all ─────────────────────────────────────────────
@@ -268,8 +277,9 @@ document.getElementById('shape-seg')&&document.getElementById('shape-seg').query
     btn.classList.add('on'); S.shape=btn.dataset.val;
     if(!sharedMats) return;
     rebuildMeshes(S.shape==='torusknot'
-      ? new THREE.TorusKnotGeometry(0.7,0.25,128,32)
+      ? new THREE.TorusKnotGeometry(0.5,0.18,128,32)
       : new THREE.SphereGeometry(1,64,64));
+    KEYS.forEach(key=>cameras[key].position.set(0,0,S.shape==='torusknot'?5.5:3.5));
   });
 });
 

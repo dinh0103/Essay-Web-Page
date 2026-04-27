@@ -270,3 +270,37 @@ html.dark #progress-bar { background: #e4e2dc; }
 .sources-list a:hover { color: var(--txt); }
 html.dark .sources-list a { color: #706e6a; border-bottom-color: rgba(255,255,255,0.08); }
 html.dark .sources-list a:hover { color: #e4e2dc; }
+
+/* ── Texture row ─────────────────────────────────────────── */
+.tex-row {
+  display: flex; gap: 1rem; margin-bottom: 1.5rem;
+}
+.tex-col {
+  flex: 1; display: flex; flex-direction: column; gap: .35rem;
+}
+.tex-col img {
+  width: 100%; border-radius: 6px; display: block;
+  object-fit: cover; max-height: 180px;
+}
+.tex-label {
+  font-size: 11px; font-weight: 600; color: var(--txt2);
+}
+.tex-hint {
+  font-size: 10px; color: var(--txt3); line-height: 1.4;
+}
+
+/* ── GDC quote ───────────────────────────────────────────── */
+.gdc-quote {
+  border-left: 2px solid var(--bdr2);
+  padding: .75rem 1rem; margin: 1.5rem 0;
+}
+.gdc-quote p {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 15px; font-weight: 400; line-height: 1.6;
+  color: var(--txt); font-style: italic; margin-bottom: .4rem;
+}
+.gdc-quote cite {
+  font-size: 11px; color: var(--txt3); font-style: normal;
+}
+html.dark .gdc-quote { border-left-color: rgba(255,255,255,0.15); }
+html.dark .gdc-quote p { color: #e4e2dc; }
