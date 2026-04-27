@@ -128,14 +128,16 @@ function makeOutlineMat(){
 function buildSlot(slot){
   const row=document.createElement('div');
   row.className='sphere-row';
-  row.style.cssText='display:flex;align-items:flex-end;gap:1.5rem;justify-content:center;margin-bottom:.75rem;cursor:grab;';
+  row.style.cssText='display:flex;align-items:flex-end;gap:1.5rem;justify-content:center;margin-bottom:.75rem;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;';
   KEYS.forEach(key=>{
     const col=document.createElement('div');
-    col.style.cssText='display:flex;flex-direction:column;align-items:center;gap:.3rem;';
+    col.style.cssText='display:flex;flex-direction:column;align-items:center;gap:.3rem;cursor:grab;';
     const canvas=document.createElement('canvas');
     canvas.width=SIZE*DPR; canvas.height=SIZE*DPR;
     canvas.style.width=SIZE+'px'; canvas.style.height=SIZE+'px';
     canvas.style.borderRadius='8px';
+    canvas.style.display='block';
+    canvas.style.touchAction='none';
     const renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:true});
     renderer.setPixelRatio(DPR); renderer.setSize(SIZE,SIZE);
     renderer.setClearColor(0x000000,0);
@@ -148,16 +150,17 @@ function buildSlot(slot){
     row.appendChild(col);
   });
 
-  // Drag bound directly to this row
-  row.addEventListener('mousedown',e=>{
-    dragging=true; dragLast={x:e.clientX,y:e.clientY};
-    row.style.cursor='grabbing'; e.preventDefault();
+  // Bind drag to the whole row (catches label clicks too) AND each canvas
+  function startDrag(e){
+    dragging=true;
+    const src=e.touches?e.touches[0]:e;
+    dragLast={x:src.clientX,y:src.clientY};
+    row.style.cursor='grabbing';
     lastInteraction=Date.now();
-  });
-  row.addEventListener('touchstart',e=>{
-    dragging=true; const t=e.touches[0]; dragLast={x:t.clientX,y:t.clientY};
-    lastInteraction=Date.now();
-  },{passive:true});
+    if(e.cancelable) e.preventDefault();
+  }
+  row.addEventListener('mousedown',startDrag);
+  row.addEventListener('touchstart',startDrag,{passive:false});
 
   slot.insertBefore(row,slot.firstChild);
 }
@@ -202,9 +205,9 @@ function rebuildMeshes(geo){
 
 // ── Load assets ──────────────────────────────────────────
 function loadAssets(){
-  uniforms.pbr={uLight:{value:getLight()},uAmb:{value:S.amb},uDif:{value:S.dif},uRough:{value:S.rough}};
-  uniforms.nintendo={uLight:{value:getLight()},uAmb:{value:S.amb},uDif:{value:S.dif},uHard:{value:S.hard},uSoftness:{value:S.softness},uShcol:{value:S.shcol},uRim:{value:S.rim},uRimcol:{value:S.rimcol},uBands:{value:S.bands}};
-  uniforms.genshin={uLight:{value:getLight()},uAmb:{value:S.amb},uDif:{value:S.dif},uBands:{value:S.bands},uRim:{value:S.rim},uSpec:{value:S.spec}};
+  uniforms.pbr={uLight:{value:new THREE.Vector3(0.5,0.7,1.0)},uAmb:{value:S.amb},uDif:{value:S.dif},uRough:{value:S.rough}};
+  uniforms.nintendo={uLight:{value:new THREE.Vector3(0.5,0.7,1.0)},uAmb:{value:S.amb},uDif:{value:S.dif},uHard:{value:S.hard},uSoftness:{value:S.softness},uShcol:{value:S.shcol},uRim:{value:S.rim},uRimcol:{value:S.rimcol},uBands:{value:S.bands}};
+  uniforms.genshin={uLight:{value:new THREE.Vector3(0.5,0.7,1.0)},uAmb:{value:S.amb},uDif:{value:S.dif},uBands:{value:S.bands},uRim:{value:S.rim},uSpec:{value:S.spec}};
   sharedMats={
     pbr:     new THREE.ShaderMaterial({vertexShader:VERT,fragmentShader:FRAG_PBR,    uniforms:uniforms.pbr,    side:THREE.FrontSide}),
     nintendo:new THREE.ShaderMaterial({vertexShader:VERT,fragmentShader:FRAG_NINTENDO,uniforms:uniforms.nintendo,side:THREE.FrontSide}),
@@ -215,10 +218,30 @@ function loadAssets(){
 
 // ── Update helpers ───────────────────────────────────────
 function updateRot(){
+  // For torus knot: rotate the mesh so its shape changes are visible
+  // For sphere: keep mesh fixed, light rotation handles the visual
+  const isKnot = S.shape === 'torusknot';
   KEYS.forEach(key=>{
-    if(meshes[key]){meshes[key].rotation.x=rotX;meshes[key].rotation.y=rotY;}
-    if(outlineMeshes[key]){outlineMeshes[key].rotation.x=rotX;outlineMeshes[key].rotation.y=rotY;}
+    if(meshes[key]){
+      meshes[key].rotation.x = isKnot ? rotX : 0;
+      meshes[key].rotation.y = isKnot ? rotY : 0;
+    }
+    if(outlineMeshes[key]){
+      outlineMeshes[key].rotation.x = isKnot ? rotX : 0;
+      outlineMeshes[key].rotation.y = isKnot ? rotY : 0;
+    }
   });
+}
+
+function getRotatedLight(){
+  // Rotate the base light direction by drag rotation
+  const az=S.az*Math.PI/180, el=S.el*Math.PI/180;
+  const base=new THREE.Vector3(
+    Math.cos(el)*Math.sin(az), Math.sin(el), Math.cos(el)*Math.cos(az)
+  );
+  // Apply drag rotation to move light around the object
+  base.applyEuler(new THREE.Euler(rotX, rotY, 0, 'XYZ'));
+  return base.normalize();
 }
 function updateOutline(){
   KEYS.forEach(key=>{
@@ -228,10 +251,10 @@ function updateOutline(){
   });
 }
 function updateUniforms(){
-  const L=getLight();
-  if(uniforms.pbr){uniforms.pbr.uLight.value=L;uniforms.pbr.uAmb.value=S.amb;uniforms.pbr.uDif.value=S.dif;uniforms.pbr.uRough.value=S.rough;}
-  if(uniforms.nintendo){uniforms.nintendo.uLight.value=L;uniforms.nintendo.uAmb.value=S.amb;uniforms.nintendo.uDif.value=S.dif;uniforms.nintendo.uHard.value=S.hard;uniforms.nintendo.uSoftness.value=S.softness;uniforms.nintendo.uShcol.value=S.shcol;uniforms.nintendo.uRim.value=S.rim;uniforms.nintendo.uRimcol.value=S.rimcol;uniforms.nintendo.uBands.value=S.bands;}
-  if(uniforms.genshin){uniforms.genshin.uLight.value=L;uniforms.genshin.uAmb.value=S.amb;uniforms.genshin.uDif.value=S.dif;uniforms.genshin.uBands.value=S.bands;uniforms.genshin.uRim.value=S.rim;uniforms.genshin.uSpec.value=S.spec;}
+  const Lx=getRotatedLight();
+  if(uniforms.pbr){uniforms.pbr.uLight.value=Lx;uniforms.pbr.uAmb.value=S.amb;uniforms.pbr.uDif.value=S.dif;uniforms.pbr.uRough.value=S.rough;}
+  if(uniforms.nintendo){uniforms.nintendo.uLight.value=Lx;uniforms.nintendo.uAmb.value=S.amb;uniforms.nintendo.uDif.value=S.dif;uniforms.nintendo.uHard.value=S.hard;uniforms.nintendo.uSoftness.value=S.softness;uniforms.nintendo.uShcol.value=S.shcol;uniforms.nintendo.uRim.value=S.rim;uniforms.nintendo.uRimcol.value=S.rimcol;uniforms.nintendo.uBands.value=S.bands;}
+  if(uniforms.genshin){uniforms.genshin.uLight.value=Lx;uniforms.genshin.uAmb.value=S.amb;uniforms.genshin.uDif.value=S.dif;uniforms.genshin.uBands.value=S.bands;uniforms.genshin.uRim.value=S.rim;uniforms.genshin.uSpec.value=S.spec;}
 }
 
 // ── Draw all ─────────────────────────────────────────────
