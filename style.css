@@ -93,17 +93,17 @@ body {
 html.dark .cmp { border-color: rgba(255,255,255,0.1); background: #1a1820; }
 
 /* ── Dark mode ──────────────────────────────────────────── */
-html.dark body { background: #0d0c12; color: #e4e2dc; }
+html.dark body { background: #0d0c12; color: #f0ede8; }
 html.dark .topbar { background: #0d0c12; border-bottom-color: rgba(255,255,255,0.07); }
-html.dark .topbar h1 { color: #e4e2dc; }
-html.dark .bar-label { color: #b0ada8; }
+html.dark .topbar h1 { color: #f0ede8; }
+html.dark .bar-label { color: #c8c5c0; }
 html.dark .story-sec { background: #0d0c12; border-bottom-color: rgba(255,255,255,0.06); }
 html.dark .story-sec:nth-child(even) { background: #111016; }
 html.dark .sec-eye { color: #8a8784; }
 html.dark .sec-q { color: #f0ede8; }
-html.dark .sec-body { color: #b0ada8; }
+html.dark .sec-body { color: #c8c5c0; }
 html.dark .sec-sub-label { color: #8a8784; }
-html.dark .slname { color: #b0ada8; }
+html.dark .slname { color: #c8c5c0; }
 html.dark .slval { color: #9a9794; }
 html.dark input[type=range] { background: #222028; }
 html.dark .chip { border-color: rgba(255,255,255,0.12); color: #9a9794; }
@@ -243,7 +243,7 @@ html.dark .sph-label { color: #e4e2dc; }
 html.dark .sph-sub   { color: #8a8784; }
 html.dark .display-slot { color: #e4e2dc; }
 html.dark .display-hint { color: #8a8784; }
-html.dark figcaption { color: #9a9794; }
+html.dark figcaption { color: #b0ada8; }
 html.dark .sec-eye { color: #8a8784; }
 html.dark figure img { opacity: .92; }
 html.dark .intro-enter { border-color: #e4e2dc; color: #e4e2dc; }
@@ -270,8 +270,8 @@ html.dark #progress-bar { background: #e4e2dc; }
   border-bottom: 1px solid var(--bdr2); transition: color .15s;
 }
 .sources-list a:hover { color: var(--txt); }
-html.dark .sources-list li { color: #b0ada8; }
-html.dark .sources-list a { color: #b0ada8; border-bottom-color: rgba(255,255,255,0.12); }
+html.dark .sources-list li { color: #c8c5c0; }
+html.dark .sources-list a { color: #c8c5c0; border-bottom-color: rgba(255,255,255,0.12); }
 html.dark .sources-list a:hover { color: #e4e2dc; }
 
 /* ── Texture row ─────────────────────────────────────────── */
