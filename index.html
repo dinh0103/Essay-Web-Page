@@ -20,7 +20,7 @@
     <span class="bar-label">Shape</span>
     <div class="seg" id="shape-seg">
       <button class="on" data-val="sphere">Sphere</button>
-      <button data-val="custom">Custom</button>
+      <button data-val="torusknot">Torus Knot</button>
     </div>
     <div class="tsep"></div>
     <span class="bar-label">Scene</span>
@@ -50,8 +50,8 @@
       <div class="sec-eye">01 / Lighting</div>
       <h2 class="sec-q">Simplified Illumination</h2>
       <p class="sec-body">Traditional 3D rendering simulates realistic lighting with smooth gradients and physically accurate reflections. In contrast, stylized anime rendering compresses lighting into fewer steps, creating sharper transitions between illuminated and shadowed surfaces. <a href="https://nugglet.github.io/posts/2022/12/console_graphics_rendering_pipeline_genshin_impact" target="_blank" class="cite-link">[2]</a></p>
-      <p class="sec-body">This contrast is especially visible when compared to The Legend of Zelda: Breath of the Wild, which retains softer gradients and more atmospheric lighting. While Breath of the Wild aims to create a cohesive atmospheric world through natural lighting, Genshin Impact emphasizes readability and visual consistency. <a href="https://youtu.be/-JFyAdI_rO8?si=EAzZOlP2O_qg6gDA" target="_blank" class="cite-link">[1]</a></p>
-      <p class="sec-body">The sharper transitions in Genshin's shading ensure that characters remain visually distinct regardless of environment. This simplified approach preserves the vibrant color palette used in anime-inspired character designs while still allowing the scene to respond dynamically to lighting.</p>
+      <p class="sec-body">This contrast is especially visible when compared to The Legend of Zelda: Breath of the Wild, developed by Nintendo, which retains softer gradients and more atmospheric lighting. While Breath of the Wild aims for a cohesive atmospheric world, Genshin Impact emphasizes readability and visual consistency — ensuring characters remain visually distinct regardless of environment. <a href="https://youtu.be/-JFyAdI_rO8?si=EAzZOlP2O_qg6gDA" target="_blank" class="cite-link">[1]</a></p>
+      <p class="sec-body">This simplified approach preserves the vibrant color palette used in anime-inspired character designs while still allowing the scene to respond dynamically to lighting.</p>
 
       <figure>
         <img src="hair-lighting.png" alt="Hair lighting comparison — day vs night" />
@@ -87,8 +87,8 @@
       <div class="sec-eye">02 / Shadows</div>
       <h2 class="sec-q">Shadow as a Design Element</h2>
       <p class="sec-body">In stylized rendering, shadows are often treated as a design element rather than a purely physical effect. Instead of appearing as gradual gradients, shadows can appear as defined shapes that help emphasize the character's form.</p>
-      <p class="sec-body">Artists often control the placement and softness of shadows using threshold values or gradient textures, allowing them to maintain consistent and visually appealing shading across characters and environments. In Genshin Impact, this includes techniques such as Cascaded Shadow Maps with Poisson noise soft shadows to achieve stable, clearly defined shadow edges. <a href="https://nugglet.github.io/posts/2022/12/console_graphics_rendering_pipeline_genshin_impact" target="_blank" class="cite-link">[2]</a></p>
-      <p class="sec-body">By designing shadows in this way, artists are able to maintain control over how forms are perceived, preventing important visual details from being lost in complex lighting conditions. This approach prioritizes clarity over realism, reinforcing the stylized aesthetic.</p>
+      <p class="sec-body">Artists often control the placement and softness of shadows using threshold values or gradient textures, allowing them to maintain consistent and visually appealing shading across characters and environments. Genshin Impact uses techniques such as Cascaded Shadow Maps with Poisson noise soft shadows to achieve stable, clearly defined shadow edges. <a href="https://nugglet.github.io/posts/2022/12/console_graphics_rendering_pipeline_genshin_impact" target="_blank" class="cite-link">[2]</a></p>
+      <p class="sec-body">By designing shadows this way, artists maintain control over how forms are perceived, preventing important visual details from being lost in complex lighting conditions. This approach prioritizes clarity over realism, reinforcing the stylized aesthetic.</p>
 
       <figure>
         <div class="cmp" id="cmp-shadows">
@@ -158,8 +158,7 @@
     <section class="story-sec" id="sec-metals" data-tab="metals">
       <div class="sec-eye">04 / Materials</div>
       <h2 class="sec-q">Stylized Metals and Highlights</h2>
-      <p class="sec-body">Materials such as metal surfaces are also stylized to match the overall art direction. Instead of using complex reflections, many objects rely on exaggerated highlights that move across the surface when lighting changes.</p>
-      <p class="sec-body">These highlights suggest shininess while maintaining performance and ensuring that the material style remains consistent with the rest of the visual design.</p>
+      <p class="sec-body">Materials such as metal surfaces are also stylized to match the overall art direction. Instead of using complex reflections, many objects rely on exaggerated highlights that move across the surface when lighting changes. These highlights suggest shininess while maintaining performance and ensuring that the material style remains consistent with the rest of the visual design.</p>
 
       <figure>
         <img src="metal.gif" alt="Stylized metal highlights" />
@@ -190,15 +189,17 @@
     <section class="story-sec" id="sec-conclusion" data-tab="conclusion">
       <div class="sec-eye">05 / Conclusion</div>
       <h2 class="sec-q">A deliberate visual language.</h2>
-      <p class="sec-body">The rendering style of Genshin Impact demonstrates how modern graphics technology can support a strong artistic vision. By simplifying lighting, shaping shadows, reinforcing silhouettes with outlines, and stylizing materials, the developers create a visual style that closely resembles anime illustration. <a href="https://youtu.be/-JFyAdI_rO8?si=EAzZOlP2O_qg6gDA" target="_blank" class="cite-link">[1]</a></p>
+      <p class="sec-body">The rendering style of Genshin Impact, developed by HoYoverse, demonstrates how modern graphics technology can support a strong artistic vision. By simplifying lighting, shaping shadows, reinforcing silhouettes with outlines, and stylizing materials, the developers create a visual style that closely resembles anime illustration. <a href="https://youtu.be/-JFyAdI_rO8?si=EAzZOlP2O_qg6gDA" target="_blank" class="cite-link">[1]</a></p>
       <p class="sec-body">Rather than focusing on realism, the game prioritizes clarity, color, and expressive design, allowing its characters and environments to remain visually distinctive throughout gameplay.</p>
       <p class="sec-body">This approach also shapes how players perceive and interact with the game world. The emphasis on clarity and stylization ensures that characters remain the visual focus, supporting both gameplay readability and the game's identity as a character-driven experience.</p>
 
       <div class="sources-block">
         <div class="sec-sub-label" style="margin-top:2rem;">Sources</div>
         <ol class="sources-list">
-          <li><a href="https://youtu.be/-JFyAdI_rO8?si=EAzZOlP2O_qg6gDA" target="_blank">Genshin Impact: Crafting an Anime-Style Open World — GDC Talk</a></li>
+          <li><a href="https://youtu.be/-JFyAdI_rO8?si=EAzZOlP2O_qg6gDA" target="_blank">Genshin Impact: Crafting an Anime-Style Open World — GDC Talk, HoYoverse</a></li>
           <li><a href="https://nugglet.github.io/posts/2022/12/console_graphics_rendering_pipeline_genshin_impact" target="_blank">Genshin Impact: Console Graphics Rendering Pipeline — nugglet</a></li>
+          <li>The Legend of Zelda: Breath of the Wild — Nintendo, 2017</li>
+          <li>Genshin Impact — HoYoverse, 2020</li>
         </ol>
       </div>
     </section>

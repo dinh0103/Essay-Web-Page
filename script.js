@@ -8,7 +8,7 @@ var S = {
   bands:2, rough:0.4, rim:0.75, rimcol:0.2, spec:0.14,
   shape:'sphere', bg:'white', tab:'lighting'
 };
-var rotX=1.35, rotY=0.4;
+var rotX=-0.2, rotY=0.4;
 var dragging=false, dragLast={x:0,y:0};
 
 const KEYS   = ['pbr','nintendo','genshin'];
@@ -20,7 +20,7 @@ const DPR    = Math.min(window.devicePixelRatio, 2);
 
 const scenes={}, cameras={}, meshes={}, outlineMeshes={}, uniforms={};
 const renderers={};
-var objGeometry=null, sharedMats=null;
+var sharedMats=null;
 
 function getLight(){
   const az=S.az*Math.PI/180, el=S.el*Math.PI/180;
@@ -99,93 +99,7 @@ void main(){
   gl_FragColor=vec4(clamp(col,0.0,1.0),1.0);
 }`;
 
-// ── OBJ Parser ──────────────────────────────────────────
-function parseOBJ(text){
-  const pos=[],uvs=[],nrm=[],oP=[],oU=[],oN=[];
-  for(const line of text.split(/\r?\n/)){
-    const p=line.trim().split(/\s+/);
-    if(p[0]==='v')       pos.push(+p[1],+p[2],+p[3]);
-    else if(p[0]==='vt') uvs.push(+p[1],+p[2]);
-    else if(p[0]==='vn') nrm.push(+p[1],+p[2],+p[3]);
-    else if(p[0]==='f'){
-      const verts=p.slice(1).map(s=>s.split('/').map(x=>x?parseInt(x)-1:0));
-      for(let i=1;i<verts.length-1;i++){
-        [verts[0],verts[i],verts[i+1]].forEach(([vi,ti,ni])=>{
-          oP.push(pos[vi*3],pos[vi*3+1],pos[vi*3+2]);
-          oU.push(uvs[ti*2],uvs[ti*2+1]);
-          oN.push(-nrm[ni*3],-nrm[ni*3+1],-nrm[ni*3+2]);
-        });
-      }
-    }
-  }
-  return {positions:new Float32Array(oP),uvs:new Float32Array(oU),normals:new Float32Array(oN)};
-}
-
-// ── Init scenes ─────────────────────────────────────────
-function initScenes(){
-  KEYS.forEach(key=>{
-    scenes[key]=new THREE.Scene();
-    cameras[key]=new THREE.PerspectiveCamera(35,1,0.01,100);
-    cameras[key].position.set(0,0,3.5);
-    renderers[key]=[];
-  });
-}
-
-// ── Outline material ─────────────────────────────────────
-function makeOutlineMat(){
-  return new THREE.ShaderMaterial({
-    vertexShader:VERT_OUTLINE,
-    fragmentShader:FRAG_OUTLINE,
-    uniforms:{uWidth:{value:0.04},uColor:{value:new THREE.Color(0x1a1916)}},
-    side:THREE.BackSide
-  });
-}
-
-// ── Build slot ───────────────────────────────────────────
-function buildSlot(slot){
-  const row=document.createElement('div');
-  row.className='sphere-row';
-  row.style.cssText='display:flex;align-items:flex-end;gap:1.5rem;justify-content:center;margin-bottom:.75rem;cursor:grab;';
-
-  KEYS.forEach(key=>{
-    const col=document.createElement('div');
-    col.style.cssText='display:flex;flex-direction:column;align-items:center;gap:.3rem;';
-
-    const canvas=document.createElement('canvas');
-    canvas.width=SIZE*DPR; canvas.height=SIZE*DPR;
-    canvas.style.width=SIZE+'px'; canvas.style.height=SIZE+'px';
-    canvas.style.borderRadius='8px';
-
-    const renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:true});
-    renderer.setPixelRatio(DPR);
-    renderer.setSize(SIZE,SIZE);
-    renderer.setClearColor(0x000000,0);
-    renderers[key].push(renderer);
-
-    const label=document.createElement('div');
-    label.className='sph-label'; label.style.color=COLORS[key]; label.textContent=LABELS[key];
-    const sub=document.createElement('div');
-    sub.className='sph-sub'; sub.textContent=SUBS[key];
-
-    col.appendChild(canvas); col.appendChild(label); col.appendChild(sub);
-    row.appendChild(col);
-  });
-
-  slot.insertBefore(row,slot.firstChild);
-}
-
-function buildAllSlots(){
-  document.querySelectorAll('.display-slot').forEach(slot=>buildSlot(slot));
-}
-
-// ── Global drag ──────────────────────────────────────────
-window.addEventListener('mousedown',e=>{
-  if(e.target.closest('.sphere-row')){
-    dragging=true; dragLast={x:e.clientX,y:e.clientY};
-    document.querySelectorAll('.sphere-row').forEach(r=>r.style.cursor='grabbing');
-    e.preventDefault();
-  }
-});
+);
 window.addEventListener('mousemove',e=>{
   if(!dragging) return;
   rotY+=(e.clientX-dragLast.x)*0.007;
@@ -239,23 +153,6 @@ function loadAssets(){
   };
 
   rebuildMeshes(new THREE.SphereGeometry(1,64,64));
-
-  fetch('lumine_hair.obj').then(r=>r.text()).then(text=>{
-    const {positions,normals}=parseOBJ(text);
-    const geo=new THREE.BufferGeometry();
-    geo.setAttribute('position',new THREE.BufferAttribute(positions,3));
-    geo.setAttribute('normal',  new THREE.BufferAttribute(normals,3));
-    geo.computeBoundingBox();
-    const c=new THREE.Vector3(); geo.boundingBox.getCenter(c);
-    geo.translate(-c.x,-c.y,-c.z);
-    geo.computeBoundingSphere();
-    const s=1.2/geo.boundingSphere.radius;
-    geo.scale(s,s,s);
-    objGeometry=geo;
-    if(S.shape==='custom'){
-      rebuildMeshes(objGeometry);
-    }
-  }).catch(()=>{});
 }
 
 // ── Update helpers ───────────────────────────────────────
@@ -333,8 +230,8 @@ document.getElementById('shape-seg')&&document.getElementById('shape-seg').query
     document.getElementById('shape-seg').querySelectorAll('button').forEach(b=>b.classList.remove('on'));
     btn.classList.add('on'); S.shape=btn.dataset.val;
     if(!sharedMats) return;
-    const isCustom=S.shape==='custom';
-    rebuildMeshes(isCustom&&objGeometry ? objGeometry : new THREE.SphereGeometry(1,64,64));
+    const isKnot=S.shape==='torusknot';
+    rebuildMeshes(isKnot ? new THREE.TorusKnotGeometry(0.7,0.25,128,32) : new THREE.SphereGeometry(1,64,64));
   });
 });
 
@@ -385,15 +282,18 @@ setTimeout(()=>{
 function initCmp(id){
   const el=document.getElementById(id);
   if(!el) return;
+  const left=el.querySelector('.cmp-left');
   const right=el.querySelector('.cmp-right');
   const divider=el.querySelector('.cmp-divider');
   let drag=false;
   function setPos(x){
     const r=el.getBoundingClientRect();
     const pct=Math.max(0,Math.min(1,(x-r.left)/r.width))*100;
+    left.style.clipPath=`inset(0 ${100-pct}% 0 0)`;
     right.style.clipPath=`inset(0 0 0 ${pct}%)`;
     divider.style.left=pct+'%';
   }
+  setPos(el.getBoundingClientRect().left + el.getBoundingClientRect().width*0.5);
   el.addEventListener('mousedown',e=>{drag=true;setPos(e.clientX);e.preventDefault();});
   window.addEventListener('mousemove',e=>{if(drag)setPos(e.clientX);});
   window.addEventListener('mouseup',()=>{drag=false;});
