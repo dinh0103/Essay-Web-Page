@@ -147,20 +147,25 @@ function buildSlot(slot){
     col.appendChild(canvas); col.appendChild(label); col.appendChild(sub);
     row.appendChild(col);
   });
+
+  // Drag bound directly to this row
+  row.addEventListener('mousedown',e=>{
+    dragging=true; dragLast={x:e.clientX,y:e.clientY};
+    row.style.cursor='grabbing'; e.preventDefault();
+    lastInteraction=Date.now();
+  });
+  row.addEventListener('touchstart',e=>{
+    dragging=true; const t=e.touches[0]; dragLast={x:t.clientX,y:t.clientY};
+    lastInteraction=Date.now();
+  },{passive:true});
+
   slot.insertBefore(row,slot.firstChild);
 }
 function buildAllSlots(){
   document.querySelectorAll('.display-slot').forEach(slot=>buildSlot(slot));
 }
 
-// ── Global drag ──────────────────────────────────────────
-window.addEventListener('mousedown',e=>{
-  if(e.target.closest('.sphere-row')){
-    dragging=true; dragLast={x:e.clientX,y:e.clientY};
-    document.querySelectorAll('.sphere-row').forEach(r=>r.style.cursor='grabbing');
-    e.preventDefault();
-  }
-});
+// ── Global move/up handlers ───────────────────────────────
 window.addEventListener('mousemove',e=>{
   if(!dragging) return;
   rotY+=(e.clientX-dragLast.x)*0.007;
@@ -169,14 +174,8 @@ window.addEventListener('mousemove',e=>{
   updateRot(); drawAll();
 });
 window.addEventListener('mouseup',()=>{
-  dragging=false;
-  document.querySelectorAll('.sphere-row').forEach(r=>r.style.cursor='grab');
+  if(dragging){ dragging=false; document.querySelectorAll('.sphere-row').forEach(r=>r.style.cursor='grab'); }
 });
-window.addEventListener('touchstart',e=>{
-  if(e.target.closest('.sphere-row')){
-    dragging=true; const t=e.touches[0]; dragLast={x:t.clientX,y:t.clientY};
-  }
-},{passive:true});
 window.addEventListener('touchmove',e=>{
   if(!dragging) return;
   const t=e.touches[0];
