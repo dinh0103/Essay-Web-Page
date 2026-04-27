@@ -350,11 +350,13 @@ loadAssets();
 ['cmp-shadows'].forEach(initCmp);
 
 // ── Auto-rotate ──────────────────────────────────────────
-let autoRotating=true, lastDrag=0;
+let lastInteraction=0;
 function autoRotate(){
-  if(autoRotating&&Date.now()-lastDrag>2000){rotY+=0.003;updateRot();drawAll();}
+  if(Date.now()-lastInteraction>2500){
+    rotY+=0.003; updateRot(); drawAll();
+  }
   requestAnimationFrame(autoRotate);
 }
-window.addEventListener('mousedown',()=>{lastDrag=Date.now();autoRotating=false;},true);
-window.addEventListener('mouseup',()=>{autoRotating=true;lastDrag=Date.now();},true);
+window.addEventListener('mousedown',()=>{lastInteraction=Date.now();},true);
+window.addEventListener('touchstart',()=>{lastInteraction=Date.now();},true);
 autoRotate();
