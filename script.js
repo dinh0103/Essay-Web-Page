@@ -71,7 +71,7 @@ uniform vec3 uLight;
 uniform float uAmb,uDif,uHard,uSoftness,uShcol,uRim,uRimcol,uBands;
 varying vec3 vNormal,vViewPos;
 void main(){
-  vec3 base=vec3(0.35,0.78,0.42);
+  vec3 base=vec3(0.90,0.42,0.60);
   vec3 N=normalize(vNormal),L=normalize(uLight),V=normalize(vViewPos);
   float diff=max(dot(N,L),0.0)*uDif;
   float soft=max(uSoftness*0.2,0.008);
@@ -92,7 +92,7 @@ uniform vec3 uLight;
 uniform float uAmb,uDif,uBands,uRim,uSpec;
 varying vec3 vNormal,vViewPos;
 void main(){
-  vec3 base=vec3(0.90,0.42,0.60);
+  vec3 base=vec3(0.35,0.78,0.42);
   vec3 N=normalize(vNormal),L=normalize(uLight),V=normalize(vViewPos);
   float diff=max(dot(N,L),0.0)*uDif;
   float stepped=floor(diff*uBands)/uBands;

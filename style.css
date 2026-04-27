@@ -276,13 +276,13 @@ html.dark .sources-list a:hover { color: #e4e2dc; }
 
 /* ── Texture row ─────────────────────────────────────────── */
 .tex-row {
-  display: flex; gap: .85rem; margin-bottom: 1.5rem; justify-content: center;
+  display: flex; gap: .75rem; margin-bottom: 1.5rem; width: 100%;
 }
 .tex-col {
-  display: flex; flex-direction: column; align-items: center; gap: .3rem; flex: 1; max-width: 220px;
+  flex: 1; display: flex; flex-direction: column; align-items: center; gap: .3rem;
 }
 .tex-col img {
-  width: 100%; border-radius: 6px; display: block; object-fit: cover;
+  width: 100%; border-radius: 6px; display: block;
 }
 .tex-label {
   font-size: 12px; font-weight: 700; color: var(--txt2); text-align: center;
