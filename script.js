@@ -8,7 +8,7 @@ var S = {
   bands:2, rough:0.4, rim:0.75, rimcol:0.2, spec:0.14, shcol2:0.45, facemap:0.65,
   shape:'sphere', bg:'white', tab:'lighting'
 };
-var rotX=-0.2, rotY=0.4;
+var rotX=1.35, rotY=0.4;
 var dragging=false, dragLast={x:0,y:0};
 
 const KEYS   = ['pbr','nintendo','genshin'];
@@ -204,7 +204,6 @@ window.addEventListener('mousemove',e=>{
   if(!dragging) return;
   const dx=e.clientX-dragLast.x, dy=e.clientY-dragLast.y;
   rotY+=dx*0.007; rotX+=dy*0.007;
-  rotX=Math.max(-Math.PI/3,Math.min(Math.PI/3,rotX));
   dragLast={x:e.clientX,y:e.clientY};
   updateRot(); drawAll();
 });
@@ -221,7 +220,6 @@ window.addEventListener('touchmove',e=>{
   if(!dragging) return;
   const t=e.touches[0], dx=t.clientX-dragLast.x, dy=t.clientY-dragLast.y;
   rotY+=dx*0.007; rotX+=dy*0.007;
-  rotX=Math.max(-Math.PI/3,Math.min(Math.PI/3,rotX));
   dragLast={x:t.clientX,y:t.clientY};
   updateRot(); drawAll();
 },{passive:true});
@@ -344,7 +342,16 @@ function wireSeg(id,key,cb){
     });
   });
 }
-wireSeg('bg-seg','bg');
+// ── Scene / dark mode toggle ─────────────────────────────
+document.getElementById('bg-seg')&&document.getElementById('bg-seg').querySelectorAll('button').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.getElementById('bg-seg').querySelectorAll('button').forEach(b=>b.classList.remove('on'));
+    btn.classList.add('on');
+    S.bg=btn.dataset.val;
+    document.documentElement.classList.toggle('dark', S.bg==='black');
+    drawAll();
+  });
+});
 
 document.getElementById('shape-seg')&&document.getElementById('shape-seg').querySelectorAll('button').forEach(btn=>{
   btn.addEventListener('click',()=>{
