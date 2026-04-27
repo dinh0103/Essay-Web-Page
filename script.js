@@ -99,7 +99,71 @@ void main(){
   gl_FragColor=vec4(clamp(col,0.0,1.0),1.0);
 }`;
 
-);
+// ── Init scenes ─────────────────────────────────────────
+function initScenes(){
+  KEYS.forEach(key=>{
+    scenes[key]=new THREE.Scene();
+    cameras[key]=new THREE.PerspectiveCamera(35,1,0.01,100);
+    cameras[key].position.set(0,0,3.5);
+    renderers[key]=[];
+  });
+}
+
+// ── Outline material ─────────────────────────────────────
+function makeOutlineMat(){
+  return new THREE.ShaderMaterial({
+    vertexShader:VERT_OUTLINE,
+    fragmentShader:FRAG_OUTLINE,
+    uniforms:{uWidth:{value:0.04},uColor:{value:new THREE.Color(0x1a1916)}},
+    side:THREE.BackSide
+  });
+}
+
+// ── Build slot ───────────────────────────────────────────
+function buildSlot(slot){
+  const row=document.createElement('div');
+  row.className='sphere-row';
+  row.style.cssText='display:flex;align-items:flex-end;gap:1.5rem;justify-content:center;margin-bottom:.75rem;cursor:grab;';
+
+  KEYS.forEach(key=>{
+    const col=document.createElement('div');
+    col.style.cssText='display:flex;flex-direction:column;align-items:center;gap:.3rem;';
+
+    const canvas=document.createElement('canvas');
+    canvas.width=SIZE*DPR; canvas.height=SIZE*DPR;
+    canvas.style.width=SIZE+'px'; canvas.style.height=SIZE+'px';
+    canvas.style.borderRadius='8px';
+
+    const renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:true});
+    renderer.setPixelRatio(DPR);
+    renderer.setSize(SIZE,SIZE);
+    renderer.setClearColor(0x000000,0);
+    renderers[key].push(renderer);
+
+    const label=document.createElement('div');
+    label.className='sph-label'; label.style.color=COLORS[key]; label.textContent=LABELS[key];
+    const sub=document.createElement('div');
+    sub.className='sph-sub'; sub.textContent=SUBS[key];
+
+    col.appendChild(canvas); col.appendChild(label); col.appendChild(sub);
+    row.appendChild(col);
+  });
+
+  slot.insertBefore(row,slot.firstChild);
+}
+
+function buildAllSlots(){
+  document.querySelectorAll('.display-slot').forEach(slot=>buildSlot(slot));
+}
+
+// ── Global drag ──────────────────────────────────────────
+window.addEventListener('mousedown',e=>{
+  if(e.target.closest('.sphere-row')){
+    dragging=true; dragLast={x:e.clientX,y:e.clientY};
+    document.querySelectorAll('.sphere-row').forEach(r=>r.style.cursor='grabbing');
+    e.preventDefault();
+  }
+});
 window.addEventListener('mousemove',e=>{
   if(!dragging) return;
   rotY+=(e.clientX-dragLast.x)*0.007;
@@ -230,8 +294,9 @@ document.getElementById('shape-seg')&&document.getElementById('shape-seg').query
     document.getElementById('shape-seg').querySelectorAll('button').forEach(b=>b.classList.remove('on'));
     btn.classList.add('on'); S.shape=btn.dataset.val;
     if(!sharedMats) return;
-    const isKnot=S.shape==='torusknot';
-    rebuildMeshes(isKnot ? new THREE.TorusKnotGeometry(0.7,0.25,128,32) : new THREE.SphereGeometry(1,64,64));
+    rebuildMeshes(S.shape==='torusknot'
+      ? new THREE.TorusKnotGeometry(0.7,0.25,128,32)
+      : new THREE.SphereGeometry(1,64,64));
   });
 });
 
@@ -293,7 +358,6 @@ function initCmp(id){
     right.style.clipPath=`inset(0 0 0 ${pct}%)`;
     divider.style.left=pct+'%';
   }
-  setPos(el.getBoundingClientRect().left + el.getBoundingClientRect().width*0.5);
   el.addEventListener('mousedown',e=>{drag=true;setPos(e.clientX);e.preventDefault();});
   window.addEventListener('mousemove',e=>{if(drag)setPos(e.clientX);});
   window.addEventListener('mouseup',()=>{drag=false;});
