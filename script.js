@@ -81,10 +81,10 @@ void main(){
   vec3 base=uUseTex?texture2D(uTex,vUv).rgb:vec3(0.35,0.78,0.42);
   vec3 N=normalize(vNormal),L=normalize(uLight),V=normalize(vViewPos);
   float diff=max(dot(N,L),0.0)*uDif;
-  float stepped=floor(diff*uBands+0.5)/uBands;
+  float stepped=floor(diff*uBands)/uBands;
   float spec=step(1.0-uSpec,pow(max(dot(reflect(-L,N),V),0.0),32.0));
-  float rim=step(0.55,1.0-max(dot(N,V),0.0))*uRim*0.6;
-  vec3 col=base*(uAmb+stepped)+vec3(spec*0.9)+vec3(rim);
+  float rim=step(0.58,1.0-max(dot(N,V),0.0))*uRim*0.55;
+  vec3 col=base*(uAmb+stepped)+vec3(spec*0.95)+vec3(rim);
   gl_FragColor=vec4(clamp(col,0.0,1.0),1.0);
 }`;
 
@@ -98,16 +98,12 @@ void main(){
   vec3 base=uUseTex?texture2D(uTex,vUv).rgb:vec3(0.90,0.42,0.60);
   vec3 N=normalize(vNormal),L=normalize(uLight),V=normalize(vViewPos);
   float diff=max(dot(N,L),0.0)*uDif;
-  // Smooth shadow boundary with controllable softness
-  float soft=max(uSoftness*0.25,0.005);
+  float soft=max(uSoftness*0.2,0.008);
   float shadow=smoothstep(uHard-soft,uHard+soft,diff);
-  vec3 shadowTint=mix(vec3(0.55,0.60,0.82),vec3(1.0),uShcol);
-  // Lit area gets full diffuse; shadow area gets tint
-  vec3 col=mix(base*shadowTint,base,shadow);
-  col=col*(uAmb+diff*(1.0-uAmb));
-  // Rim light
-  float rim=smoothstep(0.45,0.75,1.0-max(dot(N,V),0.0))*uRim*0.7;
-  col+=mix(vec3(1.0),vec3(1.0,0.82,0.55),uRimcol)*rim;
+  vec3 tint=mix(vec3(0.50,0.55,0.80),vec3(1.0),uShcol);
+  vec3 col=mix(base*tint*max(uAmb,0.35),base,shadow);
+  float rim=smoothstep(0.40,0.70,1.0-max(dot(N,V),0.0))*uRim*0.8;
+  col+=mix(vec3(1.0),vec3(1.0,0.80,0.50),uRimcol)*rim;
   gl_FragColor=vec4(clamp(col,0.0,1.0),1.0);
 }`;
 
