@@ -237,3 +237,36 @@ figcaption { font-size: 11px; color: var(--txt3); text-align: center; margin-top
 
 /* ── Slider controls ─────────────────────────────────────── */
 .sec-ctrls { width: 100%; margin: 0 auto; }
+
+/* ── Dark mode additions ─────────────────────────────────── */
+html.dark .sph-label { color: #e4e2dc; }
+html.dark .sph-sub   { color: #3c3a38; }
+html.dark .display-slot { color: #e4e2dc; }
+html.dark .display-hint { color: #3c3a38; }
+html.dark figcaption { color: #504e4a; }
+html.dark .sec-eye { color: #3c3a38; }
+html.dark figure img { opacity: .92; }
+html.dark .intro-enter { border-color: #e4e2dc; color: #e4e2dc; }
+html.dark .intro-enter:hover { background: #e4e2dc; color: #0d0c12; }
+html.dark #progress-bar { background: #e4e2dc; }
+
+/* ── Citations ───────────────────────────────────────────── */
+.cite-link {
+  font-size: 11px; font-weight: 600;
+  color: var(--txt3); text-decoration: none;
+  vertical-align: super; margin-left: 2px;
+  transition: color .15s;
+}
+.cite-link:hover { color: var(--txt); }
+
+.sources-list {
+  list-style: decimal; padding-left: 1.2rem;
+  display: flex; flex-direction: column; gap: .4rem;
+}
+.sources-list a {
+  font-size: 12px; color: var(--txt2); text-decoration: none;
+  border-bottom: 1px solid var(--bdr2); transition: color .15s;
+}
+.sources-list a:hover { color: var(--txt); }
+html.dark .sources-list a { color: #706e6a; border-bottom-color: rgba(255,255,255,0.08); }
+html.dark .sources-list a:hover { color: #e4e2dc; }
