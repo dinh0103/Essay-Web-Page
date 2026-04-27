@@ -190,7 +190,7 @@ function buildDisplay() {
 function initRenderers() {
   KEYS.forEach(key=>{
     const canvas = document.getElementById('canvas-'+key);
-    const renderer = new THREE.WebGLRenderer({canvas, antialias:true, alpha:true});
+    const renderer = new THREE.WebGLRenderer({canvas, antialias:true, alpha:true, preserveDrawingBuffer:true});
     renderer.setPixelRatio(DPR);
     renderer.setSize(SIZE, SIZE);
     renderer.setClearColor(getBgColor(), 1);
@@ -205,11 +205,53 @@ function initRenderers() {
   });
 }
 
-// ── Load model + texture, setup materials ────────────────
+var objGeometry = null; // stored after OBJ loads
+
+function buildGeometry() {
+  if (S.shape === 'sphere') {
+    return new THREE.SphereGeometry(1, 64, 64);
+  }
+  return objGeometry;
+}
+
+function rebuildMeshes(geo, mats) {
+  KEYS.forEach(key => {
+    if (meshes[key]) scenes[key].remove(meshes[key]);
+    if (!geo) return;
+    meshes[key] = new THREE.Mesh(geo, mats[key]);
+    scenes[key].add(meshes[key]);
+  });
+  updateRot();
+  drawAll();
+}
 function loadModel() {
   const texLoader = new THREE.TextureLoader();
   const tex = texLoader.load('hair_diffuse.png', ()=>drawAll());
 
+  uniforms.pbr = {
+    uTex:{value:tex}, uLight:{value:getLight()},
+    uAmb:{value:S.amb}, uDif:{value:S.dif}, uRough:{value:S.rough}
+  };
+  uniforms.nintendo = {
+    uTex:{value:tex}, uLight:{value:getLight()},
+    uAmb:{value:S.amb}, uDif:{value:S.dif},
+    uBands:{value:S.bands}, uRim:{value:S.rim}, uSpec:{value:S.spec}
+  };
+  uniforms.genshin = {
+    uTex:{value:tex}, uLight:{value:getLight()},
+    uAmb:{value:S.amb}, uHard:{value:S.hard},
+    uShcol:{value:S.shcol}, uRim:{value:S.rim}, uRimcol:{value:S.rimcol}
+  };
+  sharedMats = {
+    pbr: new THREE.ShaderMaterial({vertexShader:VERT,fragmentShader:FRAG_PBR,uniforms:uniforms.pbr,side:THREE.DoubleSide,transparent:true}),
+    nintendo: new THREE.ShaderMaterial({vertexShader:VERT,fragmentShader:FRAG_NINTENDO,uniforms:uniforms.nintendo,side:THREE.DoubleSide,transparent:true}),
+    genshin: new THREE.ShaderMaterial({vertexShader:VERT,fragmentShader:FRAG_GENSHIN,uniforms:uniforms.genshin,side:THREE.DoubleSide,transparent:true})
+  };
+
+  // Show sphere immediately
+  rebuildMeshes(new THREE.SphereGeometry(1,64,64), sharedMats);
+
+  // Load OBJ in background
   fetch('lumine_hair.obj')
     .then(r=>r.text())
     .then(text=>{
@@ -218,66 +260,18 @@ function loadModel() {
       geo.setAttribute('position', new THREE.BufferAttribute(positions,3));
       geo.setAttribute('uv',       new THREE.BufferAttribute(uvs,2));
       geo.setAttribute('normal',   new THREE.BufferAttribute(normals,3));
-
-      // Center and scale
       geo.computeBoundingBox();
-      const box = geo.boundingBox;
       const center = new THREE.Vector3();
-      box.getCenter(center);
+      geo.boundingBox.getCenter(center);
       geo.translate(-center.x,-center.y,-center.z);
       geo.computeBoundingSphere();
       const s = 1.2/geo.boundingSphere.radius;
       geo.scale(s,s,s);
-
-      // Flip UV Y (OBJ convention)
       const uvArr = geo.attributes.uv.array;
       for(let i=1;i<uvArr.length;i+=2) uvArr[i]=1-uvArr[i];
       geo.attributes.uv.needsUpdate=true;
-
-      // PBR material
-      uniforms.pbr = {
-        uTex:{value:tex}, uLight:{value:getLight()},
-        uAmb:{value:S.amb}, uDif:{value:S.dif}, uRough:{value:S.rough}
-      };
-      const matPBR = new THREE.ShaderMaterial({
-        vertexShader:VERT, fragmentShader:FRAG_PBR,
-        uniforms:uniforms.pbr, side:THREE.DoubleSide, transparent:true
-      });
-
-      // Nintendo material
-      uniforms.nintendo = {
-        uTex:{value:tex}, uLight:{value:getLight()},
-        uAmb:{value:S.amb}, uDif:{value:S.dif},
-        uBands:{value:S.bands}, uRim:{value:S.rim}, uSpec:{value:S.spec}
-      };
-      const matNintendo = new THREE.ShaderMaterial({
-        vertexShader:VERT, fragmentShader:FRAG_NINTENDO,
-        uniforms:uniforms.nintendo, side:THREE.DoubleSide, transparent:true
-      });
-
-      // Genshin material
-      uniforms.genshin = {
-        uTex:{value:tex}, uLight:{value:getLight()},
-        uAmb:{value:S.amb}, uHard:{value:S.hard},
-        uShcol:{value:S.shcol}, uRim:{value:S.rim}, uRimcol:{value:S.rimcol}
-      };
-      const matGenshin = new THREE.ShaderMaterial({
-        vertexShader:VERT, fragmentShader:FRAG_GENSHIN,
-        uniforms:uniforms.genshin, side:THREE.DoubleSide, transparent:true
-      });
-
-      const mats = {pbr:matPBR, nintendo:matNintendo, genshin:matGenshin};
-
-      KEYS.forEach(key=>{
-        const mesh = new THREE.Mesh(geo, mats[key]);
-        meshes[key] = mesh;
-        scenes[key].add(mesh);
-        const ambient = new THREE.AmbientLight(0xffffff, 0.1);
-        scenes[key].add(ambient);
-      });
-
-      updateRot();
-      drawAll();
+      objGeometry = geo;
+      if(S.shape==='custom') rebuildMeshes(objGeometry, sharedMats);
     });
 }
 
@@ -414,8 +408,19 @@ function wireSeg(id,key,cb){
     });
   });
 }
-wireSeg('shape-seg','shape');
 wireSeg('bg-seg','bg');
+
+// Shape toggle — rebuild meshes when switching
+document.getElementById('shape-seg').querySelectorAll('button').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.getElementById('shape-seg').querySelectorAll('button').forEach(b=>b.classList.remove('on'));
+    btn.classList.add('on');
+    S.shape = btn.dataset.val;
+    if(!sharedMats) return;
+    const geo = S.shape==='sphere' ? new THREE.SphereGeometry(1,64,64) : objGeometry;
+    if(geo) rebuildMeshes(geo, sharedMats);
+  });
+});
 
 // ── Chip wiring ──────────────────────────────────────────
 document.querySelectorAll('[data-smode]').forEach(btn=>{
