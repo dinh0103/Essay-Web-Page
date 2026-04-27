@@ -94,14 +94,14 @@
       <figure>
         <div class="cmp" id="cmp-shadows">
           <div class="cmp-inner">
-            <div class="cmp-side cmp-left"><img src="nomap.png" alt="No shadow map" /></div>
-            <div class="cmp-side cmp-right"><img src="map.png" alt="With shadow map" /></div>
+            <div class="cmp-side cmp-left"><img src="nomap.png" alt="No light map" /></div>
+            <div class="cmp-side cmp-right"><img src="map.png" alt="With light map" /></div>
             <div class="cmp-divider"></div>
-            <div class="cmp-tag left">No shadow map</div>
-            <div class="cmp-tag right">With shadow map</div>
+            <div class="cmp-tag left">No light map</div>
+            <div class="cmp-tag right">With light map</div>
           </div>
         </div>
-        <figcaption>Drag to compare shadow shaping with and without a shadow map applied.</figcaption>
+        <figcaption>Drag to compare shadow shaping with and without a light map applied.</figcaption>
       </figure>
 
       <div class="display-slot">
@@ -114,7 +114,7 @@
           <button class="chip on" data-smode="native">Native</button>
           <button class="chip" data-smode="gradient">Gradient</button>
           <button class="chip" data-smode="hard">Hard</button>
-          <button class="chip" data-smode="facemap">Shadow Map</button>
+          <button class="chip" data-smode="facemap">light map</button>
         </div>
         <div class="slrow">
           <div class="sltop"><span class="slname">Shadow softness</span><span class="slval" id="v-softness">0.10</span></div>
@@ -161,10 +161,6 @@
       <h2 class="sec-q">Stylized Metals and Highlights</h2>
       <p class="sec-body">Materials such as metal surfaces are also stylized to match the overall art direction. Instead of using complex reflections, many objects rely on exaggerated highlights that move across the surface when lighting changes. These highlights suggest shininess while maintaining performance and ensuring that the material style remains consistent with the rest of the visual design.</p>
 
-      <blockquote class="gdc-quote">
-        <p>"The goal is not to have something ultra-realistic, but to refine and improve the quality, maintain the game's recognizable art style, and keep it accessible across platforms."</p>
-        <cite>— HoYoverse R&D Engineer, <a href="https://youtu.be/2iu7xGqiNzM?t=844" target="_blank" class="cite-link">Behind the Scenes: To Snezhnaya and the Future [3]</a></cite>
-      </blockquote>
 
       <div class="sec-sub-label" style="margin-bottom:.75rem;">Behind the textures</div>
       <div class="tex-row">
@@ -185,18 +181,15 @@
         </div>
       </div>
 
-      <div class="tex-row">
-        <div class="tex-col">
-          <img src="metal.gif" alt="Stylized metal highlights" />
-          <div class="tex-label">Metal highlights</div>
-          <div class="tex-hint">Exaggerated specular shifts across the surface as lighting changes.</div>
-        </div>
-        <div class="tex-col">
-          <img src="metal-matcap.png" alt="Metal matcap texture" />
-          <div class="tex-label">Matcap texture</div>
-          <div class="tex-hint">Surface normals map to this image to look up the highlight color — shine without real reflections.</div>
-        </div>
-      </div>
+      <figure>
+        <img src="metal.gif" alt="Stylized metal highlights" />
+        <figcaption>Exaggerated specular highlights shift across the surface as the light direction changes.</figcaption>
+      </figure>
+
+      <figure>
+        <img src="metal-matcap.png" alt="Metal matcap texture" />
+        <figcaption>A matcap (material capture) texture used to simulate metallic reflections. The shading system maps the surface normal to this image to look up the highlight color — giving the appearance of shine without the cost of real reflections.</figcaption>
+      </figure>
 
       <div class="display-slot">
         <div class="display-hint">drag to rotate</div>
