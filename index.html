@@ -109,13 +109,6 @@
       </div>
 
       <div class="sec-ctrls">
-        <div class="sec-sub-label">Shadow mode</div>
-        <div class="sec-opts">
-          <button class="chip on" data-smode="native">Native</button>
-          <button class="chip" data-smode="gradient">Gradient</button>
-          <button class="chip" data-smode="hard">Hard</button>
-          <button class="chip" data-smode="facemap">light map</button>
-        </div>
         <div class="slrow">
           <div class="sltop"><span class="slname">Shadow softness</span><span class="slval" id="v-softness">0.10</span></div>
           <input type="range" id="sl-softness" min="0.01" max="1" step="0.01" value="0.1" />
@@ -179,16 +172,16 @@
           <div class="tex-label">Normal Map</div>
           <div class="tex-hint">Encodes surface direction for shading detail</div>
         </div>
+        <div class="tex-col">
+          <img src="metal-matcap.png" alt="Metal matcap texture" />
+          <div class="tex-label">Matcap</div>
+          <div class="tex-hint">Maps surface normals to highlight color for stylized metal shine</div>
+        </div>
       </div>
 
       <figure>
         <img src="metal.gif" alt="Stylized metal highlights" />
         <figcaption>Exaggerated specular highlights shift across the surface as the light direction changes.</figcaption>
-      </figure>
-
-      <figure>
-        <img src="metal-matcap.png" alt="Metal matcap texture" />
-        <figcaption>A matcap (material capture) texture used to simulate metallic reflections. The shading system maps the surface normal to this image to look up the highlight color — giving the appearance of shine without the cost of real reflections.</figcaption>
       </figure>
 
       <div class="display-slot">
@@ -234,6 +227,6 @@
   </div><!-- /story -->
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-  <script src="script.js"></script>
+  <script src="script.js?v=2"></script>
 </body>
 </html>

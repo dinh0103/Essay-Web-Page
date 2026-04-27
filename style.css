@@ -223,9 +223,9 @@ html.dark #progress-bar { background: #e4e2dc; }
 /* ── Comparison panel overrides ─────────────────────────── */
 .cmp { max-width: none; }
 .cmp-inner { padding-top: 65%; }
-figure { margin: 0 auto 1.25rem; width: 100%; }
+figure { margin: 0 auto 1.25rem; width: 85%; }
 figure img, figure .cmp { width: 100%; border-radius: 6px; margin-bottom: 0; }
-figcaption { font-size: 11px; color: var(--txt3); text-align: center; margin-top: .5rem; line-height: 1.5; }
+figcaption { font-size: 12px; color: var(--txt3); text-align: center; margin-top: .5rem; line-height: 1.5; }
 
 /* ── Sphere slot ─────────────────────────────────────────── */
 .display-slot {
@@ -262,12 +262,15 @@ html.dark #progress-bar { background: #e4e2dc; }
 .sources-list {
   list-style: decimal; padding-left: 1.2rem;
   display: flex; flex-direction: column; gap: .4rem;
+  font-size: 12px; color: var(--txt2); line-height: 1.6;
 }
+.sources-list li { font-size: 12px; color: var(--txt2); }
 .sources-list a {
   font-size: 12px; color: var(--txt2); text-decoration: none;
   border-bottom: 1px solid var(--bdr2); transition: color .15s;
 }
 .sources-list a:hover { color: var(--txt); }
+html.dark .sources-list li { color: #706e6a; }
 html.dark .sources-list a { color: #706e6a; border-bottom-color: rgba(255,255,255,0.08); }
 html.dark .sources-list a:hover { color: #e4e2dc; }
 
@@ -276,16 +279,16 @@ html.dark .sources-list a:hover { color: #e4e2dc; }
   display: flex; gap: .85rem; margin-bottom: 1.5rem; justify-content: center;
 }
 .tex-col {
-  display: flex; flex-direction: column; align-items: center; gap: .3rem; flex: 1; max-width: 150px;
+  display: flex; flex-direction: column; align-items: center; gap: .3rem; flex: 1; max-width: 220px;
 }
 .tex-col img {
   width: 100%; border-radius: 6px; display: block; object-fit: cover;
 }
 .tex-label {
-  font-size: 11px; font-weight: 700; color: var(--txt2); text-align: center;
+  font-size: 12px; font-weight: 700; color: var(--txt2); text-align: center;
 }
 .tex-hint {
-  font-size: 9px; color: var(--txt3); line-height: 1.4; text-align: center;
+  font-size: 12px; color: var(--txt3); line-height: 1.4; text-align: center;
 }
 
 /* ── GDC quote ───────────────────────────────────────────── */
@@ -299,7 +302,7 @@ html.dark .sources-list a:hover { color: #e4e2dc; }
   color: var(--txt); font-style: italic; margin-bottom: .4rem;
 }
 .gdc-quote cite {
-  font-size: 11px; color: var(--txt3); font-style: normal;
+  font-size: 12px; color: var(--txt3); font-style: normal;
 }
 html.dark .gdc-quote { border-left-color: rgba(255,255,255,0.15); }
 html.dark .gdc-quote p { color: #e4e2dc; }
