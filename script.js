@@ -12,10 +12,10 @@ var rotX=-0.2, rotY=0.4;
 var dragging=false, dragLast={x:0,y:0};
 
 const KEYS   = ['pbr','nintendo','genshin'];
-const LABELS = {pbr:'PBR', nintendo:'Nintendo', genshin:'Genshin'};
-const SUBS   = {pbr:'realistic', nintendo:'simplified', genshin:'drawn'};
-const COLORS = {pbr:'#1a6fd4', nintendo:'#1a9e58', genshin:'#d4437a'};
-const SIZE   = 150;
+const LABELS = {pbr:'PBR', nintendo:'Genshin', genshin:'Nintendo'};
+const SUBS   = {pbr:'realistic', nintendo:'drawn', genshin:'simplified'};
+const COLORS = {pbr:'#1a6fd4', nintendo:'#d4437a', genshin:'#1a9e58'};
+const SIZE   = 190;
 const DPR    = Math.min(window.devicePixelRatio, 2);
 
 const scenes={}, cameras={}, meshes={}, outlineMeshes={}, uniforms={};
