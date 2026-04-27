@@ -31,11 +31,9 @@ function getLight(){
 
 // ── GLSL ─────────────────────────────────────────────────
 const VERT = `
-varying vec2 vUv;
 varying vec3 vNormal;
 varying vec3 vViewPos;
 void main(){
-  vUv=uv;
   vec4 mv=modelViewMatrix*vec4(position,1.0);
   vViewPos=-mv.xyz;
   vNormal=normalize(normalMatrix*normal);
@@ -56,13 +54,11 @@ uniform vec3 uColor;
 void main(){ gl_FragColor=vec4(uColor,1.0); }`;
 
 const FRAG_PBR=`
-uniform sampler2D uTex;
 uniform vec3 uLight;
 uniform float uAmb,uDif,uRough;
-uniform bool uUseTex;
-varying vec2 vUv; varying vec3 vNormal,vViewPos;
+varying vec3 vNormal,vViewPos;
 void main(){
-  vec3 base=uUseTex?texture2D(uTex,vUv).rgb:vec3(0.68,0.72,0.88);
+  vec3 base=vec3(0.68,0.72,0.88);
   vec3 N=normalize(vNormal),L=normalize(uLight),V=normalize(vViewPos),H=normalize(L+V);
   float diff=max(dot(N,L),0.0)*uDif;
   float gloss=max(1.0-uRough*uRough,0.01);
@@ -71,13 +67,11 @@ void main(){
 }`;
 
 const FRAG_NINTENDO=`
-uniform sampler2D uTex;
 uniform vec3 uLight;
 uniform float uAmb,uDif,uBands,uRim,uSpec;
-uniform bool uUseTex;
-varying vec2 vUv; varying vec3 vNormal,vViewPos;
+varying vec3 vNormal,vViewPos;
 void main(){
-  vec3 base=uUseTex?texture2D(uTex,vUv).rgb:vec3(0.35,0.78,0.42);
+  vec3 base=vec3(0.35,0.78,0.42);
   vec3 N=normalize(vNormal),L=normalize(uLight),V=normalize(vViewPos);
   float diff=max(dot(N,L),0.0)*uDif;
   float stepped=floor(diff*uBands)/uBands;
@@ -88,17 +82,16 @@ void main(){
 }`;
 
 const FRAG_GENSHIN=`
-uniform sampler2D uTex;
 uniform vec3 uLight;
-uniform float uAmb,uDif,uHard,uSoftness,uShcol,uRim,uRimcol;
-uniform bool uUseTex;
-varying vec2 vUv; varying vec3 vNormal,vViewPos;
+uniform float uAmb,uDif,uHard,uSoftness,uShcol,uRim,uRimcol,uBands;
+varying vec3 vNormal,vViewPos;
 void main(){
-  vec3 base=uUseTex?texture2D(uTex,vUv).rgb:vec3(0.90,0.42,0.60);
+  vec3 base=vec3(0.90,0.42,0.60);
   vec3 N=normalize(vNormal),L=normalize(uLight),V=normalize(vViewPos);
   float diff=max(dot(N,L),0.0)*uDif;
+  float stepped=floor(diff*uBands)/uBands;
   float soft=max(uSoftness*0.2,0.008);
-  float shadow=smoothstep(uHard-soft,uHard+soft,diff);
+  float shadow=smoothstep(uHard-soft,uHard+soft,stepped);
   vec3 tint=mix(vec3(0.50,0.55,0.80),vec3(1.0),uShcol);
   vec3 col=mix(base*tint*max(uAmb,0.35),base,shadow);
   float rim=smoothstep(0.40,0.70,1.0-max(dot(N,V),0.0))*uRim*0.8;
@@ -235,11 +228,9 @@ function rebuildMeshes(geo){
 
 // ── Load assets ──────────────────────────────────────────
 function loadAssets(){
-  const tex=new THREE.TextureLoader().load('hair_diffuse.png',()=>drawAll());
-
-  uniforms.pbr={uTex:{value:tex},uLight:{value:getLight()},uAmb:{value:S.amb},uDif:{value:S.dif},uRough:{value:S.rough},uUseTex:{value:false}};
-  uniforms.nintendo={uTex:{value:tex},uLight:{value:getLight()},uAmb:{value:S.amb},uDif:{value:S.dif},uBands:{value:S.bands},uRim:{value:S.rim},uSpec:{value:S.spec},uUseTex:{value:false}};
-  uniforms.genshin={uTex:{value:tex},uLight:{value:getLight()},uAmb:{value:S.amb},uDif:{value:S.dif},uHard:{value:S.hard},uSoftness:{value:S.softness},uShcol:{value:S.shcol},uRim:{value:S.rim},uRimcol:{value:S.rimcol},uUseTex:{value:false}};
+  uniforms.pbr={uLight:{value:getLight()},uAmb:{value:S.amb},uDif:{value:S.dif},uRough:{value:S.rough}};
+  uniforms.nintendo={uLight:{value:getLight()},uAmb:{value:S.amb},uDif:{value:S.dif},uBands:{value:S.bands},uRim:{value:S.rim},uSpec:{value:S.spec}};
+  uniforms.genshin={uLight:{value:getLight()},uAmb:{value:S.amb},uDif:{value:S.dif},uHard:{value:S.hard},uSoftness:{value:S.softness},uShcol:{value:S.shcol},uRim:{value:S.rim},uRimcol:{value:S.rimcol},uBands:{value:S.bands}};
 
   sharedMats={
     pbr:     new THREE.ShaderMaterial({vertexShader:VERT,fragmentShader:FRAG_PBR,    uniforms:uniforms.pbr,    side:THREE.FrontSide}),
@@ -250,10 +241,9 @@ function loadAssets(){
   rebuildMeshes(new THREE.SphereGeometry(1,64,64));
 
   fetch('lumine_hair.obj').then(r=>r.text()).then(text=>{
-    const {positions,uvs,normals}=parseOBJ(text);
+    const {positions,normals}=parseOBJ(text);
     const geo=new THREE.BufferGeometry();
     geo.setAttribute('position',new THREE.BufferAttribute(positions,3));
-    geo.setAttribute('uv',      new THREE.BufferAttribute(uvs,2));
     geo.setAttribute('normal',  new THREE.BufferAttribute(normals,3));
     geo.computeBoundingBox();
     const c=new THREE.Vector3(); geo.boundingBox.getCenter(c);
@@ -263,7 +253,6 @@ function loadAssets(){
     geo.scale(s,s,s);
     objGeometry=geo;
     if(S.shape==='custom'){
-      KEYS.forEach(k=>{if(uniforms[k])uniforms[k].uUseTex.value=true;});
       rebuildMeshes(objGeometry);
     }
   }).catch(()=>{});
@@ -302,6 +291,7 @@ function updateUniforms(){
     uniforms.genshin.uDif.value=S.dif; uniforms.genshin.uHard.value=S.hard;
     uniforms.genshin.uSoftness.value=S.softness; uniforms.genshin.uShcol.value=S.shcol;
     uniforms.genshin.uRim.value=S.rim; uniforms.genshin.uRimcol.value=S.rimcol;
+    uniforms.genshin.uBands.value=S.bands;
   }
 }
 
@@ -344,7 +334,6 @@ document.getElementById('shape-seg')&&document.getElementById('shape-seg').query
     btn.classList.add('on'); S.shape=btn.dataset.val;
     if(!sharedMats) return;
     const isCustom=S.shape==='custom';
-    KEYS.forEach(k=>{if(uniforms[k])uniforms[k].uUseTex.value=isCustom;});
     rebuildMeshes(isCustom&&objGeometry ? objGeometry : new THREE.SphereGeometry(1,64,64));
   });
 });
