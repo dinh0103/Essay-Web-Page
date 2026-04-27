@@ -32,8 +32,7 @@
 
   <!-- Hidden viewer-section tracker for JS -->
   <span id="viewer-section" style="display:none">lighting</span>
-  <!-- Hidden render target for script.js — mirrors copy from here -->
-  <div id="display" style="display:none;position:absolute;pointer-events:none;"></div>
+  <div id="display" style="display:none"></div>
 
   <!-- ── Story ──────────────────────────────────────── -->
   <div class="story" id="story">
@@ -70,21 +69,18 @@
 
       <div class="sec-ctrls">
         <div class="slrow">
-          <div class="sltop"><span class="slname">Light direction (azimuth)</span><span class="slval" id="v-az">45°</span></div>
+          <div class="sltop"><span class="slname">Light direction</span><span class="slval" id="v-az">45°</span></div>
           <input type="range" id="sl-az" min="0" max="360" step="1" value="45" />
         </div>
         <div class="slrow">
-          <div class="sltop"><span class="slname">Light height (elevation)</span><span class="slval" id="v-el">40°</span></div>
+          <div class="sltop"><span class="slname">Light height</span><span class="slval" id="v-el">40°</span></div>
           <input type="range" id="sl-el" min="0" max="85" step="1" value="40" />
         </div>
         <div class="slrow">
-          <div class="sltop"><span class="slname">Shadow fill (ambient)</span><span class="slval" id="v-amb">0.25</span></div>
+          <div class="sltop"><span class="slname">Shadow fill</span><span class="slval" id="v-amb">0.25</span></div>
           <input type="range" id="sl-amb" min="0" max="1" step="0.01" value="0.25" />
         </div>
-        <div class="slrow">
-          <div class="sltop"><span class="slname">Light intensity (diffuse)</span><span class="slval" id="v-dif">0.85</span></div>
-          <input type="range" id="sl-dif" min="0" max="1.5" step="0.01" value="0.85" />
-        </div>
+        <input type="range" id="sl-dif" min="0" max="1.5" step="0.01" value="0.85" style="display:none" />
       </div>
     </section>
 
@@ -122,10 +118,6 @@
           <button class="chip" data-smode="facemap">Shadow Map</button>
         </div>
         <div class="slrow">
-          <div class="sltop"><span class="slname">Shadow direction (azimuth)</span><span class="slval" id="v-az-sh">45°</span></div>
-          <input type="range" id="sl-az-sh" min="0" max="360" step="1" value="45" />
-        </div>
-        <div class="slrow">
           <div class="sltop"><span class="slname">Edge sharpness</span><span class="slval" id="v-hard">0.92</span></div>
           <input type="range" id="sl-hard" min="0" max="1" step="0.01" value="0.92" />
         </div>
@@ -133,6 +125,7 @@
           <div class="sltop"><span class="slname">Shadow tint</span><span class="slval" id="v-shcol">0.45</span></div>
           <input type="range" id="sl-shcol" min="0" max="1" step="0.01" value="0.45" />
         </div>
+        <input type="range" id="sl-az-sh" min="0" max="360" step="1" value="45" style="display:none" />
       </div>
     </section>
 
@@ -160,24 +153,13 @@
           <button class="chip" data-omode="normal">Normal</button>
           <button class="chip" data-omode="both">Both</button>
         </div>
-        <div class="sec-sub-label">Outline colour</div>
-        <div class="sec-opts">
-          <button class="chip on" data-ocol="ink">Ink</button>
-          <button class="chip" data-ocol="colored">Tinted</button>
-          <button class="chip" data-ocol="dark">Dark</button>
-        </div>
         <div class="slrow">
           <div class="sltop"><span class="slname">Outline width</span><span class="slval" id="v-olt">2.0</span></div>
           <input type="range" id="sl-olt" min="0.5" max="5" step="0.1" value="2.0" />
         </div>
-        <div class="slrow">
-          <div class="sltop"><span class="slname">Outline sensitivity</span><span class="slval" id="v-oltsens">0.50</span></div>
-          <input type="range" id="sl-oltsens" min="0.05" max="1" step="0.01" value="0.5" />
-        </div>
-        <div class="slrow">
-          <div class="sltop"><span class="slname">Crease threshold (normals)</span><span class="slval" id="v-normedge">0.30</span></div>
-          <input type="range" id="sl-normedge" min="0.05" max="1" step="0.01" value="0.3" />
-        </div>
+        <input type="range" id="sl-oltsens" min="0.05" max="1" step="0.01" value="0.5" style="display:none" />
+        <input type="range" id="sl-normedge" min="0.05" max="1" step="0.01" value="0.3" style="display:none" />
+        <button class="chip on" data-ocol="ink" style="display:none">Ink</button>
       </div>
     </section>
 
@@ -199,33 +181,21 @@
 
       <div class="sec-ctrls">
         <div class="slrow">
-          <div class="sltop"><span class="slname">Shading steps (toon bands)</span><span class="slval" id="v-bands">2</span></div>
+          <div class="sltop"><span class="slname">Shading steps</span><span class="slval" id="v-bands">2</span></div>
           <input type="range" id="sl-bands" min="1" max="8" step="1" value="2" />
         </div>
         <div class="slrow">
-          <div class="sltop"><span class="slname">Surface roughness (PBR)</span><span class="slval" id="v-rough">0.40</span></div>
+          <div class="sltop"><span class="slname">Surface roughness</span><span class="slval" id="v-rough">0.40</span></div>
           <input type="range" id="sl-rough" min="0.02" max="1" step="0.01" value="0.4" />
         </div>
         <div class="slrow">
           <div class="sltop"><span class="slname">Rim light</span><span class="slval" id="v-rim">0.75</span></div>
           <input type="range" id="sl-rim" min="0" max="1.5" step="0.01" value="0.75" />
         </div>
-        <div class="slrow">
-          <div class="sltop"><span class="slname">Rim color warmth</span><span class="slval" id="v-rimcol">0.20</span></div>
-          <input type="range" id="sl-rimcol" min="0" max="1" step="0.01" value="0.2" />
-        </div>
-        <div class="slrow">
-          <div class="sltop"><span class="slname">Highlight size (specular)</span><span class="slval" id="v-spec">0.14</span></div>
-          <input type="range" id="sl-spec" min="0" max="0.5" step="0.005" value="0.14" />
-        </div>
-        <div class="slrow">
-          <div class="sltop"><span class="slname">Shadow tint</span><span class="slval" id="v-shcol2">0.45</span></div>
-          <input type="range" id="sl-shcol2" min="0" max="1" step="0.01" value="0.45" />
-        </div>
-        <div class="slrow">
-          <div class="sltop"><span class="slname">Shadow map blend</span><span class="slval" id="v-facemap">0.65</span></div>
-          <input type="range" id="sl-facemap" min="0" max="1" step="0.01" value="0.65" />
-        </div>
+        <input type="range" id="sl-rimcol" min="0" max="1" step="0.01" value="0.2" style="display:none" />
+        <input type="range" id="sl-spec" min="0" max="0.5" step="0.005" value="0.14" style="display:none" />
+        <input type="range" id="sl-shcol2" min="0" max="1" step="0.01" value="0.45" style="display:none" />
+        <input type="range" id="sl-facemap" min="0" max="1" step="0.01" value="0.65" style="display:none" />
       </div>
     </section>
 
@@ -240,6 +210,7 @@
 
   </div><!-- /story -->
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="script.js"></script>
 </body>
 </html>
