@@ -68,43 +68,37 @@ void main(){
 
 const FRAG_NINTENDO=`
 uniform vec3 uLight;
-uniform float uAmb,uDif,uBands,uRim,uSpec;
+uniform float uAmb,uDif,uHard,uSoftness,uShcol,uRim,uRimcol,uBands;
 varying vec3 vNormal,vViewPos;
 void main(){
   vec3 base=vec3(0.35,0.78,0.42);
+  vec3 N=normalize(vNormal),L=normalize(uLight),V=normalize(vViewPos);
+  float diff=max(dot(N,L),0.0)*uDif;
+  float soft=max(uSoftness*0.2,0.008);
+  float threshold=uHard*(1.0-(uBands-1.0)*0.08);
+  float shadow=smoothstep(threshold-soft,threshold+soft,diff);
+  vec3 shadowTint=mix(vec3(0.45,0.52,0.82),vec3(1.0),uShcol);
+  vec3 col=mix(base*shadowTint,base,shadow);
+  col=col*(uAmb+diff*(1.0-uAmb));
+  float spec=pow(max(dot(reflect(-L,N),V),0.0),24.0)*0.5*shadow;
+  col+=vec3(spec);
+  float rim=smoothstep(0.38,0.68,1.0-max(dot(N,V),0.0))*uRim*0.85;
+  col+=mix(vec3(1.0),vec3(1.0,0.80,0.50),uRimcol)*rim;
+  gl_FragColor=vec4(clamp(col,0.0,1.0),1.0);
+}`;
+
+const FRAG_GENSHIN=`
+uniform vec3 uLight;
+uniform float uAmb,uDif,uBands,uRim,uSpec;
+varying vec3 vNormal,vViewPos;
+void main(){
+  vec3 base=vec3(0.90,0.42,0.60);
   vec3 N=normalize(vNormal),L=normalize(uLight),V=normalize(vViewPos);
   float diff=max(dot(N,L),0.0)*uDif;
   float stepped=floor(diff*uBands)/uBands;
   float spec=step(1.0-uSpec,pow(max(dot(reflect(-L,N),V),0.0),32.0));
   float rim=step(0.58,1.0-max(dot(N,V),0.0))*uRim*0.55;
   vec3 col=base*(uAmb+stepped)+vec3(spec*0.95)+vec3(rim);
-  gl_FragColor=vec4(clamp(col,0.0,1.0),1.0);
-}`;
-
-const FRAG_GENSHIN=`
-uniform vec3 uLight;
-uniform float uAmb,uDif,uHard,uSoftness,uShcol,uRim,uRimcol,uBands;
-varying vec3 vNormal,vViewPos;
-void main(){
-  vec3 base=vec3(0.90,0.42,0.60);
-  vec3 N=normalize(vNormal),L=normalize(uLight),V=normalize(vViewPos);
-  float diff=max(dot(N,L),0.0)*uDif;
-  // Smooth shadow boundary — no hard stepping, that's Nintendo's thing
-  float soft=max(uSoftness*0.2,0.008);
-  float shadow=smoothstep(uHard-soft,uHard+soft,diff);
-  // uBands shifts the threshold so fewer bands = harder boundary
-  float threshold=uHard*(1.0-(uBands-1.0)*0.08);
-  shadow=smoothstep(threshold-soft,threshold+soft,diff);
-  // Cool tinted shadow — Genshin's defining characteristic
-  vec3 shadowTint=mix(vec3(0.45,0.52,0.82),vec3(1.0),uShcol);
-  vec3 col=mix(base*shadowTint,base,shadow);
-  col=col*(uAmb+diff*(1.0-uAmb));
-  // Stylized specular — softer than Nintendo's hard step
-  float spec=pow(max(dot(reflect(-L,N),V),0.0),24.0)*0.5*shadow;
-  col+=vec3(spec);
-  // Warm expressive rim light
-  float rim=smoothstep(0.38,0.68,1.0-max(dot(N,V),0.0))*uRim*0.85;
-  col+=mix(vec3(1.0),vec3(1.0,0.80,0.50),uRimcol)*rim;
   gl_FragColor=vec4(clamp(col,0.0,1.0),1.0);
 }`;
 
@@ -211,8 +205,8 @@ function loadAssets(){
   uniforms.genshin={uLight:{value:getLight()},uAmb:{value:S.amb},uDif:{value:S.dif},uBands:{value:S.bands},uRim:{value:S.rim},uSpec:{value:S.spec}};
   sharedMats={
     pbr:     new THREE.ShaderMaterial({vertexShader:VERT,fragmentShader:FRAG_PBR,    uniforms:uniforms.pbr,    side:THREE.FrontSide}),
-    nintendo:new THREE.ShaderMaterial({vertexShader:VERT,fragmentShader:FRAG_GENSHIN,uniforms:uniforms.nintendo,side:THREE.FrontSide}),
-    genshin: new THREE.ShaderMaterial({vertexShader:VERT,fragmentShader:FRAG_NINTENDO,uniforms:uniforms.genshin, side:THREE.FrontSide})
+    nintendo:new THREE.ShaderMaterial({vertexShader:VERT,fragmentShader:FRAG_NINTENDO,uniforms:uniforms.nintendo,side:THREE.FrontSide}),
+    genshin: new THREE.ShaderMaterial({vertexShader:VERT,fragmentShader:FRAG_GENSHIN, uniforms:uniforms.genshin, side:THREE.FrontSide})
   };
   rebuildMeshes(new THREE.SphereGeometry(1,64,64));
 }
