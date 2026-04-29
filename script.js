@@ -335,7 +335,11 @@ window.addEventListener('scroll',()=>{
   const pct=window.scrollY/(document.body.scrollHeight-window.innerHeight)*100;
   if(progressBar) progressBar.style.width=Math.min(pct,100)+'%';
 });
-document.querySelectorAll('.sec-eye,.sec-q,h3,.sec-body,figure,.display-slot').forEach(el=>el.classList.add('reveal'));
+document.querySelectorAll('.sec-eye,.sec-q,h3,.sec-body,figure,.display-slot').forEach(el=>{
+  // Don't hide the intro spheres — they should be visible immediately
+  if(el.closest('#sec-intro')) return;
+  el.classList.add('reveal');
+});
 setTimeout(()=>{
   const ro=new IntersectionObserver(entries=>{
     entries.forEach(e=>e.target.classList.toggle('visible',e.isIntersecting));
@@ -343,12 +347,34 @@ setTimeout(()=>{
   document.querySelectorAll('.reveal').forEach(el=>ro.observe(el));
 },200);
 
+// ── Lightbox ──────────────────────────────────────────────
+const lightbox = document.getElementById('lightbox');
+const lightboxImg = document.getElementById('lightbox-img');
+function openLightbox(src, alt){
+  lightboxImg.src=src; lightboxImg.alt=alt;
+  lightbox.style.display='flex';
+  document.body.style.overflow='hidden';
+}
+function closeLightbox(){
+  lightbox.style.display='none';
+  document.body.style.overflow='';
+}
+document.getElementById('lightbox-backdrop').addEventListener('click', closeLightbox);
+document.getElementById('lightbox-close').addEventListener('click', closeLightbox);
+document.addEventListener('keydown', e=>{ if(e.key==='Escape') closeLightbox(); });
+
+// Apply to all figure imgs and tex-col imgs
+document.querySelectorAll('figure img, .tex-col img').forEach(img=>{
+  img.addEventListener('click', ()=>openLightbox(img.src, img.alt));
+});
+
 // ── Comparison slider ─────────────────────────────────────
 function initCmp(id){
   const el=document.getElementById(id); if(!el) return;
   const left=el.querySelector('.cmp-left');
   const right=el.querySelector('.cmp-right');
   const divider=el.querySelector('.cmp-divider');
+  const handle=el.querySelector('.cmp-handle');
   let drag=false;
   function setPos(x){
     const r=el.getBoundingClientRect();
@@ -356,6 +382,7 @@ function initCmp(id){
     left.style.clipPath=`inset(0 ${100-pct}% 0 0)`;
     right.style.clipPath=`inset(0 0 0 ${pct}%)`;
     divider.style.left=pct+'%';
+    if(handle) handle.style.left=pct+'%';
   }
   el.addEventListener('mousedown',e=>{drag=true;setPos(e.clientX);e.preventDefault();});
   window.addEventListener('mousemove',e=>{if(drag)setPos(e.clientX);});
@@ -370,6 +397,8 @@ initScenes();
 buildAllSlots();
 loadAssets();
 ['cmp-shadows'].forEach(initCmp);
+// Ensure all slots render once everything is ready
+setTimeout(()=>drawAll(), 100);
 
 // ── Auto-rotate ──────────────────────────────────────────
 let lastInteraction=0;

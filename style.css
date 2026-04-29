@@ -230,7 +230,7 @@ figcaption { font-size: 12px; color: var(--txt3); text-align: center; margin-top
 /* ── Sphere slot ─────────────────────────────────────────── */
 .display-slot {
   display: flex; flex-direction: column; align-items: center;
-  gap: .5rem; margin-bottom: 2rem;
+  gap: .5rem; margin-bottom: 2rem; min-height: 200px;
 }
 .display-hint { font-size: 10px; color: var(--txt3); letter-spacing: .03em; }
 #display { display: flex; align-items: flex-end; gap: .85rem; justify-content: center; }
@@ -309,3 +309,65 @@ html.dark .gdc-quote p { color: #e4e2dc; }
 
 html.dark .tex-label { color: #b0ada8; }
 html.dark .tex-hint  { color: #8a8784; }
+
+/* ── Subtle background lighting ─────────────────────────── */
+body {
+  background-image: radial-gradient(ellipse at 30% 20%, rgba(180,170,255,0.07) 0%, transparent 60%),
+                    radial-gradient(ellipse at 80% 80%, rgba(255,200,180,0.06) 0%, transparent 55%);
+}
+html.dark body {
+  background-image: radial-gradient(ellipse at 25% 15%, rgba(100,80,200,0.12) 0%, transparent 55%),
+                    radial-gradient(ellipse at 75% 85%, rgba(200,80,120,0.09) 0%, transparent 50%);
+}
+.story-sec:nth-child(even) {
+  background-image: radial-gradient(ellipse at 70% 50%, rgba(180,170,255,0.05) 0%, transparent 60%);
+}
+html.dark .story-sec:nth-child(even) {
+  background-image: radial-gradient(ellipse at 70% 50%, rgba(100,80,200,0.08) 0%, transparent 60%);
+}
+
+/* ── Lightbox ────────────────────────────────────────────── */
+#lightbox {
+  position: fixed; inset: 0; z-index: 200;
+  display: flex; align-items: center; justify-content: center;
+}
+#lightbox-backdrop {
+  position: absolute; inset: 0;
+  background: rgba(0,0,0,0.75); backdrop-filter: blur(4px);
+  cursor: zoom-out;
+}
+#lightbox-img {
+  position: relative; max-width: 88vw; max-height: 88vh;
+  border-radius: 8px; object-fit: contain;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.5);
+  animation: lb-in .2s ease;
+}
+#lightbox-close {
+  position: absolute; top: 1.25rem; right: 1.25rem;
+  width: 36px; height: 36px; border-radius: 50%;
+  border: none; background: rgba(255,255,255,0.15);
+  color: #fff; font-size: 16px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background .15s;
+}
+#lightbox-close:hover { background: rgba(255,255,255,0.3); }
+@keyframes lb-in {
+  from { opacity:0; transform: scale(.93); }
+  to   { opacity:1; transform: scale(1); }
+}
+
+/* Expandable cursor on tex images and figures */
+.tex-col img, figure img {
+  cursor: zoom-in;
+}
+
+/* ── Comparison handle ───────────────────────────────────── */
+.cmp-handle {
+  position: absolute; top: 50%; left: 50%;
+  transform: translate(-50%,-50%);
+  width: 32px; height: 32px; border-radius: 50%;
+  background: #fff; border: 1px solid rgba(0,0,0,.1);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; color: #999; pointer-events: none;
+  box-shadow: 0 1px 6px rgba(0,0,0,.18);
+}
